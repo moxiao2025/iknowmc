@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>投影与投影打印机使用技巧 · 文档整理</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f6f52'/%3E%3Cpath d='M16 6l8 4.6v9.2L16 24.4l-8-4.6v-9.2L16 6z' fill='none' stroke='%23d8eadf' stroke-width='1.8'/%3E%3Cpath d='M8 10.6l8 4.6 8-4.6M16 15.2v9.2' fill='none' stroke='%23d8eadf' stroke-width='1.6'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f5f2ea;
+    --paper:#fffdf8;
+    --ink:#1d2420;
+    --muted:#67716b;
+    --line:#e3ddd0;
+    --accent:#2f6f52;
+    --accent-soft:#e8f1ea;
+    --accent-line:#bfd8c9;
+    --sidebar:#152019;
+    --side-text:#c9d5cc;
+    --side-muted:#85978c;
+    --side-active:#a9e2bd;
+    --amber:#98571a;
+    --amber-bg:#fbf1de;
+    --amber-line:#e6c793;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(29,36,32,.04), 0 12px 32px rgba(29,36,32,.05);
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:84px}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:#cfe6d8}
+  a{color:var(--accent)}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    position:fixed;top:0;left:288px;right:0;height:52px;z-index:40;
+    display:flex;align-items:center;gap:12px;padding:0 24px;
+    background:rgba(245,242,234,.88);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .crumb{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .crumb b{color:var(--ink);font-weight:600}
+  .progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent}
+  .progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#7cb695);transition:width .12s linear}
+  .menu-btn{
+    display:none;align-items:center;justify-content:center;flex:0 0 auto;
+    width:38px;height:38px;border:1px solid var(--line);border-radius:10px;
+    background:var(--paper);color:var(--ink);cursor:pointer;padding:0;
+  }
+
+  /* ---------- 侧边栏 ---------- */
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;width:288px;z-index:50;
+    background:var(--sidebar);color:var(--side-text);
+    display:flex;flex-direction:column;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;padding:22px 22px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto;
+  }
+  .brand-mark{
+    width:36px;height:36px;border-radius:10px;flex:0 0 auto;
+    background:linear-gradient(145deg,#3c8a67,#295f46);
+    color:#e7f5ec;font-size:16px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .brand strong{display:block;font-size:15px;color:#f0f6f2;letter-spacing:.4px}
+  .brand small{display:block;font-size:11.5px;color:var(--side-muted);letter-spacing:.6px;margin-top:2px}
+  .close-btn{
+    display:none;margin-left:auto;width:34px;height:34px;border-radius:8px;
+    border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--side-text);cursor:pointer;
+  }
+  .nav{overflow-y:auto;padding:16px 0 24px;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+  .nav::-webkit-scrollbar{width:6px}
+  .nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}
+  .nav-group{margin:0 0 18px}
+  .nav-label{
+    display:block;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--side-muted);padding:0 22px 8px;text-decoration:none;
+  }
+  .nav-label:hover{color:var(--side-text)}
+  .nav a{
+    display:block;position:relative;text-decoration:none;color:var(--side-text);
+    font-size:13.5px;line-height:1.5;padding:8px 18px 8px 22px;
+    border-left:3px solid transparent;transition:background .18s,color .18s;
+  }
+  .nav a .idx{
+    display:inline-block;width:18px;color:var(--side-muted);
+    font-family:var(--mono);font-size:11.5px;margin-right:6px;
+  }
+  .nav a:hover{background:rgba(255,255,255,.05);color:#fff}
+  .nav a.active{
+    background:rgba(140,212,174,.1);color:var(--side-active);border-left-color:var(--accent-side,#79c79f);font-weight:600;
+  }
+  .nav a.active .idx{color:var(--side-active)}
+  .side-foot{
+    flex:0 0 auto;padding:14px 22px 18px;border-top:1px solid rgba(255,255,255,.08);
+    font-size:11.5px;color:var(--side-muted);letter-spacing:.3px;
+  }
+  .overlay{
+    position:fixed;inset:0;background:rgba(12,18,14,.5);backdrop-filter:blur(2px);
+    z-index:45;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;
+  }
+  .overlay.show{opacity:1;visibility:visible}
+
+  /* ---------- 主体 ---------- */
+  .main{margin-left:288px}
+  .wrap{max-width:920px;margin:0 auto;padding:92px 44px 88px}
+
+  .hero{padding:0 0 40px;border-bottom:1px solid var(--line);margin-bottom:44px}
+  .eyebrow{font-size:12px;letter-spacing:2px;color:var(--accent);font-weight:700;margin:0 0 10px}
+  .hero h1{
+    font-size:clamp(28px,4.4vw,42px);line-height:1.25;margin:0 0 14px;
+    letter-spacing:-.5px;font-weight:800;
+  }
+  .hero .sub{font-size:16px;color:var(--muted);margin:0;max-width:620px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .meta span{
+    font-size:12px;color:#55605a;background:var(--paper);border:1px solid var(--line);
+    border-radius:999px;padding:4px 12px;
+  }
+  .hero-links{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
+  .hero-card{
+    display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);
+    border-radius:14px;padding:16px 18px;transition:border-color .2s,transform .2s,box-shadow .2s;
+  }
+  .hero-card:hover{border-color:var(--accent-line);transform:translateY(-2px);box-shadow:var(--shadow)}
+  .hc-kicker{display:block;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:2px}
+  .hc-title{display:block;font-size:16px;font-weight:700;color:var(--ink)}
+  .hc-desc{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  .part{margin-bottom:20px}
+  .part-head{padding:8px 0 20px}
+  .part-index{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.5px;
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);
+    border-radius:999px;padding:2px 10px;margin-bottom:10px;
+  }
+  .part-head h2{font-size:clamp(23px,3vw,29px);margin:0 0 6px;letter-spacing:-.3px;font-weight:800}
+  .part-head p{margin:0;color:var(--muted);font-size:14.5px}
+
+  .topic{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 30px 30px;margin:18px 0;box-shadow:var(--shadow);
+  }
+  .topic-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+  .num{
+    flex:0 0 auto;min-width:40px;height:40px;padding:0 8px;border-radius:11px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);
+    font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.5px;
+  }
+  .topic h3{font-size:19px;margin:0;line-height:1.5;padding-top:6px;font-weight:700}
+  .lead{margin:0 0 14px;font-size:15.5px;color:#2c3430}
+  .subject{margin:2px 0 10px;font-size:13px;color:var(--muted)}
+
+  .steps,.bullets{margin:10px 0 4px;padding:0;list-style:none;counter-reset:step}
+  .steps li,.bullets li{position:relative;padding-left:34px;margin:9px 0;font-size:15px;line-height:1.8}
+  .steps li{counter-increment:step}
+  .steps li::before{
+    content:counter(step);position:absolute;left:0;top:2px;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);
+    font-family:var(--mono);font-size:11.5px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .bullets li::before{
+    content:"";position:absolute;left:8px;top:12px;width:5px;height:5px;border-radius:50%;
+    background:var(--accent-line);
+  }
+
+  .op-list{margin:10px 0 6px;padding:12px 16px;background:#f8f7f2;border:1px dashed #d8d2c4;border-radius:10px;list-style:none}
+  .op-list li{position:relative;padding-left:18px;font-size:14px;font-family:var(--mono);line-height:1.9;color:#38413c}
+  .op-list li::before{content:"›";position:absolute;left:2px;color:var(--accent);font-weight:700}
+
+  kbd{
+    display:inline-block;font-family:var(--mono);font-size:12.5px;line-height:1.5;
+    padding:1px 7px;border-radius:6px;background:#f1f3ee;border:1px solid #d6dbd3;
+    border-bottom-width:2px;color:#26302a;white-space:nowrap;
+  }
+  .path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0;font-size:14.5px}
+  .sep{color:#a8b2ab;font-size:12px}
+  .menu-item{
+    display:inline-block;padding:1px 8px;border-radius:6px;
+    background:#f4f1e8;border:1px solid #e0d9c8;color:#4c4435;font-size:13.5px;
+  }
+
+  .note{
+    display:flex;gap:10px;margin:16px 0 4px;padding:11px 14px;
+    background:var(--amber-bg);border:1px solid var(--amber-line);border-left:3px solid #d19a4e;
+    border-radius:9px;font-size:13.5px;color:#6b4a1c;line-height:1.75;
+  }
+  .note b{flex:0 0 auto;color:var(--amber);font-weight:700}
+
+  .shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0 0}
+  .shot-grid.single{grid-template-columns:1fr}
+  .shot{
+    margin:22px 0 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    background:#101713;box-shadow:0 2px 10px rgba(20,28,24,.1);
+  }
+  .shot-grid .shot{margin:0}
+  .shot img{
+    display:block;width:100%;height:auto;cursor:zoom-in;
+    background:#101713;
+  }
+  .shot figcaption{
+    background:#faf8f2;border-top:1px solid var(--line);
+    padding:8px 12px;font-size:12.5px;line-height:1.6;color:var(--muted);
+  }
+
+  .table-wrap{margin:18px 0 4px}
+  table{width:100%;border-collapse:collapse;font-size:14px;background:#fffdf8}
+  thead th{
+    text-align:left;font-size:12px;letter-spacing:.6px;color:#5b655f;
+    background:#f3f0e7;font-weight:700;padding:9px 12px;border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody td{padding:11px 12px;border-bottom:1px solid #ece7dc;vertical-align:top;line-height:1.7}
+  tbody tr:last-child td{border-bottom:none}
+  tbody td:first-child{font-weight:600;white-space:nowrap}
+  tbody td:nth-child(2){font-family:var(--mono);font-size:13px;color:#2f6f52;white-space:nowrap}
+  .table-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+
+  .footer{
+    margin-top:44px;padding-top:24px;border-top:1px solid var(--line);
+    font-size:12.5px;color:#7a837d;line-height:1.9;
+  }
+  .footer h4{font-size:12px;letter-spacing:1.4px;color:#5d6761;margin:0 0 8px;text-transform:uppercase}
+  .footer ul{margin:0;padding-left:18px}
+  .footer li{margin:3px 0}
+
+  /* ---------- 灯箱 ---------- */
+  .lightbox{
+    position:fixed;inset:0;z-index:1000;display:none;
+    align-items:center;justify-content:center;flex-direction:column;gap:12px;
+    padding:28px;background:rgba(8,13,10,.92);
+  }
+  .lightbox.show{display:flex}
+  .lightbox img{max-width:min(1100px,94vw);max-height:82vh;width:auto;height:auto;border-radius:8px;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+  .lightbox p{color:#d7e2da;font-size:13px;margin:0;text-align:center;max-width:760px}
+  .lightbox .lb-close{
+    position:absolute;top:16px;right:18px;width:40px;height:40px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;
+    font-size:20px;line-height:1;cursor:pointer;
+  }
+  .lightbox .lb-close:hover{background:rgba(255,255,255,.16)}
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width:1024px){
+    .sidebar{transform:translateX(-100%);transition:transform .28s ease;width:min(86vw,340px);box-shadow:0 0 40px rgba(0,0,0,.3)}
+    .sidebar.open{transform:none}
+    .close-btn{display:inline-flex;align-items:center;justify-content:center}
+    .main{margin-left:0}
+    .topbar{left:0;padding:0 14px;gap:10px}
+    .menu-btn{display:inline-flex}
+    .wrap{padding:84px 24px 72px}
+    html{scroll-padding-top:72px}
+  }
+  @media (max-width:720px){
+    .hero-links{grid-template-columns:1fr}
+    .shot-grid{grid-template-columns:1fr}
+    .wrap{padding:80px 16px 64px}
+    .topic{padding:20px 18px 24px;border-radius:14px}
+    .topic-head{gap:10px}
+    .num{min-width:34px;height:34px;border-radius:9px;font-size:12.5px}
+    .topic h3{font-size:17px}
+    .hero h1{letter-spacing:-.3px}
+    .steps li,.bullets li{font-size:14.5px;padding-left:30px}
+    .steps li::before{width:20px;height:20px;font-size:11px}
+    .path{font-size:13.5px}
+  }
+  @media (max-width:640px){
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .table-wrap{border:none;border-radius:0;overflow:visible}
+    tbody tr{
+      border:1px solid var(--line);border-radius:10px;background:#fffdf8;
+      margin-bottom:10px;padding:4px 12px;
+    }
+    tbody td{
+      display:flex;gap:12px;justify-content:space-between;align-items:baseline;
+      border-bottom:1px dashed #eee8db;padding:9px 0;white-space:normal!important;
+    }
+    tbody tr td:last-child{border-bottom:none}
+    tbody td::before{
+      content:attr(data-label);flex:0 0 88px;color:#7a837d;font-weight:600;
+      font-size:12px;letter-spacing:.4px;
+    }
+    .meta span{font-size:11px}
+    .footer ul{padding-left:16px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{transition:none!important}
+  }
+  @media print{
+    .sidebar,.topbar,.overlay,.menu-btn,.lightbox{display:none!important}
+    .main{margin:0}
+    .wrap{padding:0;max-width:none}
+    .topic{box-shadow:none;break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <span class="brand-mark">投</span>
+    <div>
+      <strong>投影技巧文档</strong>
+      <small>LITEMATICA · 使用整理</small>
+    </div>
+    <button class="close-btn" id="closeBtn" aria-label="关闭章节导航">✕</button>
+  </div>
+
+  <nav class="nav" id="nav" aria-label="章节导航">
+    <div class="nav-group">
+      <a class="nav-label" href="#part-1">第一部分 · 投影使用技巧</a>
+      <a href="#t1-1" data-title="1. 如何放置原理图"><span class="idx">01</span>如何放置原理图</a>
+      <a href="#t1-2" data-title="2. 调整原理图位置"><span class="idx">02</span>调整原理图位置</a>
+      <a href="#t1-3" data-title="3. 微调原理图"><span class="idx">03</span>微调原理图</a>
+      <a href="#t1-4" data-title="4. 渲染层调整"><span class="idx">04</span>渲染层调整</a>
+      <a href="#t1-5" data-title="5. 替换投影方块"><span class="idx">05</span>替换投影方块</a>
+      <a href="#t1-6" data-title="6. 批量替换投影方块"><span class="idx">06</span>批量替换投影方块</a>
+      <a href="#t1-7" data-title="7. 单人模式粘贴原理图"><span class="idx">07</span>单人模式粘贴原理图</a>
+      <a href="#t1-8" data-title="8. 轻松放置"><span class="idx">08</span>轻松放置</a>
+      <a href="#t1-9" data-title="9. 楼梯方向错误"><span class="idx">09</span>楼梯方向错误</a>
+      <a href="#t1-10" data-title="10. 禁用投影木棍"><span class="idx">10</span>禁用投影木棍</a>
+      <a href="#t1-11" data-title="11. 不显示原理图"><span class="idx">11</span>不显示原理图</a>
+      <a href="#t1-12" data-title="12. 不渲染也可以打印"><span class="idx">12</span>不渲染也可以打印</a>
+      <a href="#t1-13" data-title="13. 原理图验证"><span class="idx">13</span>原理图验证</a>
+    </div>
+    <div class="nav-group">
+      <a class="nav-label" href="#part-2">第二部分 · 投影打印机使用技巧</a>
+      <a href="#t2-1" data-title="1. 如何打开打印机设置界面"><span class="idx">01</span>如何打开打印机设置界面</a>
+      <a href="#t2-2" data-title="2. 设置打印快捷键"><span class="idx">02</span>设置打印快捷键</a>
+      <a href="#t2-3" data-title="3. 工作模式切换"><span class="idx">03</span>工作模式切换</a>
+      <a href="#t2-4" data-title="4. 放置速度"><span class="idx">04</span>放置速度</a>
+      <a href="#t2-5" data-title="5. 破坏速度"><span class="idx">05</span>破坏速度</a>
+      <a href="#t2-6" data-title="6. 其他"><span class="idx">06</span>其他</a>
+      <a href="#speedy" data-title="参数速查"><span class="idx">附</span>参数速查</a>
+    </div>
+  </nav>
+
+  <div class="side-foot">2 个部分 · 19 个技巧 · 11 张附图</div>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="打开章节导航" aria-expanded="false" aria-controls="sidebar">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"/>
+    </svg>
+  </button>
+  <div class="crumb">投影与投影打印机 <span aria-hidden="true">/</span> 当前：<b id="currentLabel">概览</b></div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main class="main">
+  <div class="wrap">
+
+    <section class="hero" id="top">
+      <p class="eyebrow">LITEMATICA 文档整理</p>
+      <h1>投影与投影打印机<br>使用技巧</h1>
+      <p class="sub">从原理图的加载、摆放与编辑，到投影打印机的开关、模式与速度设置，按原文顺序与层级整理为可跳转的页面。</p>
+      <div class="meta">
+        <span>2 个部分</span>
+        <span>19 个技巧</span>
+        <span>11 张附图</span>
+        <span>原文 + 6 条补充</span>
+      </div>
+      <div class="hero-links">
+        <a class="hero-card" href="#part-1">
+          <span class="hc-kicker">第一部分</span>
+          <span class="hc-title">投影使用技巧</span>
+          <span class="hc-desc">加载、调整、微调、渲染层、替换与粘贴</span>
+        </a>
+        <a class="hero-card" href="#part-2">
+          <span class="hc-kicker">第二部分</span>
+          <span class="hc-title">投影打印机使用技巧</span>
+          <span class="hc-desc">设置入口、快捷键、工作模式与放置/破坏速度</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============ 第一部分 ============ -->
+    <section class="part" id="part-1">
+      <div class="part-head">
+        <span class="part-index">第一部分</span>
+        <h2>投影使用技巧</h2>
+        <p>共 13 个技巧：如何放置与调整原理图，以及微调、渲染层、方块替换、单人模式粘贴，和轻松放置、原理图验证等补充技巧。</p>
+      </div>
+
+      <section class="topic" id="t1-1">
+        <div class="topic-head">
+          <span class="num">01</span>
+          <h3>如何放置原理图</h3>
+        </div>
+        <p class="lead">通过主菜单加载要投影的原理图。</p>
+        <ol class="steps">
+          <li>按 <kbd>M</kbd> 打开主菜单。</li>
+          <li>点击「加载原理图」。</li>
+          <li>在列表中选中要加载的原理图。</li>
+          <li>点击「加载」。</li>
+        </ol>
+        <div class="shot-grid">
+          <figure class="shot">
+            <img src="images/fig-01.png" width="535" height="365" alt="Litematica 主菜单，红框标出「加载原理图」按钮" loading="lazy" decoding="async">
+            <figcaption>图 1 · 主菜单中的「加载原理图」</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="images/fig-02.png" width="456" height="257" alt="已加载原理图列表，红框标出底部的「加载原理图」按钮" loading="lazy" decoding="async">
+            <figcaption>图 2 · 选中原理图后，点击「加载原理图」</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="topic" id="t1-2">
+        <div class="topic-head">
+          <span class="num">02</span>
+          <h3>调整原理图位置</h3>
+        </div>
+        <p class="lead">已加载的原理图可以整体调整位置、旋转与镜像。</p>
+        <ul class="bullets">
+          <li>小键盘 <kbd>-</kbd> 号，或 <kbd>M</kbd> <span class="sep">→</span> 原理图放置列表 <span class="sep">→</span> <span class="menu-item">配置</span>，可以调整位置、旋转镜像等等。</li>
+          <li>手持木棍，<kbd>Ctrl</kbd> + <kbd>滚轮</kbd>，切换到「2-原理图放置」。</li>
+          <li>手持木棍，左键或右键点击地面等方块。</li>
+        </ul>
+        <figure class="shot">
+          <img src="images/fig-03.png" width="551" height="585" alt="原理图放置配置界面，包含放置原点、旋转、镜像等选项" loading="lazy" decoding="async">
+          <figcaption>图 3 · 放置配置界面：放置原点、旋转、镜像等选项</figcaption>
+        </figure>
+      </section>
+
+      <section class="topic" id="t1-3">
+        <div class="topic-head">
+          <span class="num">03</span>
+          <h3>微调原理图</h3>
+        </div>
+        <p class="lead">在「原理图放置」模式下对位置做精细调整。</p>
+        <ol class="steps">
+          <li>切换到「2-原理图放置」。</li>
+          <li><kbd>Alt</kbd> + <kbd>滚轮</kbd>，以自己的朝向滚动前后左右；面朝下时，就是上下。</li>
+        </ol>
+        <figure class="shot">
+          <img src="images/fig-04.png" width="375" height="148" alt="游戏内 HUD 显示当前模式为「2/9：原理图放置」" loading="lazy" decoding="async">
+          <figcaption>图 4 · HUD 显示当前模式「2/9：原理图放置」</figcaption>
+        </figure>
+      </section>
+
+      <section class="topic" id="t1-4">
+        <div class="topic-head">
+          <span class="num">04</span>
+          <h3>渲染层调整</h3>
+        </div>
+        <p class="lead">按层级查看或调整原理图的渲染内容。</p>
+        <ul class="bullets">
+          <li><kbd>M</kbd> + <kbd>PageUp</kbd> 或 <kbd>M</kbd> + <kbd>PageDown</kbd>。</li>
+          <li><kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">渲染层</span>，修改层级。</li>
+          <li>之后使用 <kbd>PageUp</kbd> 或 <kbd>PageDown</kbd> 调整层级。</li>
+        </ul>
+        <figure class="shot">
+          <img src="images/fig-05.png" width="573" height="235" alt="配置菜单的渲染层页，箭头指向「层级：全部」选项" loading="lazy" decoding="async">
+          <figcaption>图 5 · 「渲染层」页中的「层级：全部」</figcaption>
+        </figure>
+      </section>
+
+      <section class="topic" id="t1-5">
+        <div class="topic-head">
+          <span class="num">05</span>
+          <h3>替换投影方块</h3>
+        </div>
+        <p class="lead">直接在投影区内逐个替换方块。</p>
+        <ol class="steps">
+          <li>手持木棍，<kbd>Ctrl</kbd> + <kbd>滚轮</kbd>，切换到「9-编辑原理图」。</li>
+          <li>左键删除方块，右键放置方块，只在投影区内有效。</li>
+        </ol>
+        <div class="note"><b>注意</b><span>删除与放置操作只在投影区内有效。</span></div>
+      </section>
+
+      <section class="topic" id="t1-6">
+        <div class="topic-head">
+          <span class="num">06</span>
+          <h3>批量替换投影方块</h3>
+        </div>
+        <p class="lead">先为批量操作绑定快捷键，再到编辑模式中执行。</p>
+        <ol class="steps">
+          <li>
+            快捷键 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">快捷键</span>，找到以下可绑定的操作：
+            <ul class="op-list">
+              <li>原理图编辑-替换所有此方块</li>
+              <li>原理图编辑-破坏或添加所有此方块</li>
+              <li>原理图编辑-破坏或添加一列方块</li>
+            </ul>
+          </li>
+          <li>手持木棍，<kbd>Ctrl</kbd> + <kbd>滚轮</kbd>，切换到「9-编辑原理图」。</li>
+          <li>按住快捷键，左右键进行操作，单人模式下自己练习一下。</li>
+        </ol>
+        <div class="shot-grid">
+          <figure class="shot">
+            <img src="images/fig-06.png" width="1037" height="511" alt="游戏内「9/9：编辑原理图」模式，箭头指向被编辑的方块" loading="lazy" decoding="async">
+            <figcaption>图 6 · 「9/9：编辑原理图」模式下的批量操作</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="images/fig-07.png" width="753" height="533" alt="游戏内编辑原理图模式下的方块近景" loading="lazy" decoding="async">
+            <figcaption>图 7 · 编辑原理图模式下的投影方块</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="topic" id="t1-7">
+        <div class="topic-head">
+          <span class="num">07</span>
+          <h3>单人模式粘贴原理图</h3>
+        </div>
+        <p class="lead">在单人模式下把原理图直接粘贴到世界中。</p>
+        <ol class="steps">
+		  <li>快捷键 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">快捷键</span> <span class="sep">→</span> <span class="menu-item">执行操作</span>。</li>
+          <li>手持木棍，<kbd>Ctrl</kbd> + <kbd>滚轮</kbd>，切换到「5-粘贴原理图」。快捷键执行</li>
+          
+        </ol>
+      </section>
+
+      <section class="topic" id="t1-8">
+        <div class="topic-head">
+          <span class="num">08</span>
+          <h3>轻松放置</h3>
+        </div>
+        <p class="lead">开启轻松放置后，对准投影右键即可放置方块。</p>
+        <ol class="steps">
+          <li>快捷键 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">快捷键</span>，找到「轻松设置-开关键」并设置。</li>
+          <li>按下设置好的开关，对准投影点击右键。</li>
+          <li>包裹内有对应方块时就会放置。</li>
+        </ol>
+      </section>
+
+      <section class="topic" id="t1-9">
+        <div class="topic-head">
+          <span class="num">09</span>
+          <h3>楼梯方向错误</h3>
+        </div>
+        <p class="lead">放置楼梯时方向错误，可能是服务器不支持协议。</p>
+        <ol class="steps">
+          <li>快捷键 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">全部</span> <span class="sep">→</span> <span class="menu-item">轻松放置-协议版本</span>。</li>
+          <li>修改版本后再次尝试。</li>
+        </ol>
+      </section>
+
+      <section class="topic" id="t1-10">
+        <div class="topic-head">
+          <span class="num">10</span>
+          <h3>禁用投影木棍</h3>
+        </div>
+        <p class="lead">需要停用投影木棍时，使用组合键关闭。</p>
+        <div class="path"><kbd>M</kbd><span class="sep">+</span><kbd>T</kbd></div>
+      </section>
+
+      <section class="topic" id="t1-11">
+        <div class="topic-head">
+          <span class="num">11</span>
+          <h3>不显示原理图</h3>
+        </div>
+        <p class="lead">隐藏原理图的显示。</p>
+        <ol class="steps">
+          <li>快捷键 <kbd>M</kbd> + <kbd>R</kbd>，同时禁用投影木棍。</li>
+        </ol>
+      </section>
+
+      <section class="topic" id="t1-12">
+        <div class="topic-head">
+          <span class="num">12</span>
+          <h3>不渲染也可以打印</h3>
+        </div>
+        <p class="lead">不渲染原理图也能继续打印，可缓解过大原理图带来的渲染困难。</p>
+        <ol class="steps">
+          <li>快捷键 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">视效</span> <span class="sep">→</span> <span class="menu-item">开关-原理图渲染</span>，并设置一个快捷键。</li>
+          <li>可解决打印过大的原理图导致的渲染困难。</li>
+        </ol>
+      </section>
+
+      <section class="topic" id="t1-13">
+        <div class="topic-head">
+          <span class="num">13</span>
+          <h3>原理图验证</h3>
+        </div>
+        <p class="lead">用原理图验证器检查缺失、错误方块，并定位到具体位置。</p>
+        <ol class="steps">
+          <li>快捷键 小键盘 <kbd>-</kbd> 号，或 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">已加载原理图</span> <span class="sep">→</span> <span class="menu-item">配置</span>。</li>
+          <li>验证原理图。</li>
+          <li>验证之后点击「缺失」「错误」等标签，再点击具体项目，就会高亮对应位置的方块。</li>
+        </ol>
+        <figure class="shot">
+          <img src="images/fig-08.png" width="795" height="394" alt="原理图验证器界面：缺失方块列表与具体项目，箭头指向数量" loading="lazy" decoding="async">
+          <figcaption>图 10 · 原理图验证器：切换到「缺失方块」等标签，查看具体项目</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="images/fig-09.png" width="645" height="370" alt="游戏内对应位置的方块被高亮显示，箭头指向高亮方块" loading="lazy" decoding="async">
+          <figcaption>图 11 · 点击具体项目后，对应位置的方块被高亮</figcaption>
+        </figure>
+      </section>
+    </section>
+
+    <!-- ============ 第二部分 ============ -->
+    <section class="part" id="part-2">
+      <div class="part-head">
+        <span class="part-index">第二部分</span>
+        <h2>投影打印机使用技巧</h2>
+        <p>共 6 个技巧：设置界面的打开方式、快捷键绑定、工作模式切换，以及放置与破坏速度。</p>
+      </div>
+
+      <section class="topic" id="t2-1">
+        <div class="topic-head">
+          <span class="num">01</span>
+          <h3>如何打开打印机设置界面</h3>
+        </div>
+        <ul class="bullets">
+          <li>快捷键 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">打印机设置</span>。</li>
+          <li>或 <kbd>Z</kbd> + <kbd>Y</kbd>；打印机版本不同，快捷键可能不同。</li>
+        </ul>
+      </section>
+
+      <section class="topic" id="t2-2">
+        <div class="topic-head">
+          <span class="num">02</span>
+          <h3>设置打印快捷键</h3>
+        </div>
+        <div class="path">
+          <span class="menu-item">打印机设置</span><span class="sep">→</span>
+          <span class="menu-item">快捷键</span><span class="sep">→</span>
+          <span class="menu-item">工作开关</span>
+        </div>
+      </section>
+
+      <section class="topic" id="t2-3">
+        <div class="topic-head">
+          <span class="num">03</span>
+          <h3>工作模式切换</h3>
+        </div>
+        <div class="path">
+          <span class="menu-item">打印机设置</span><span class="sep">→</span>
+          <span class="menu-item">快捷键</span><span class="sep">→</span>
+          <span class="menu-item">切换模式</span>
+		  <ul class="bullets">
+          <li>切换时最好先关闭工作</li>
+          <li>(打印机版本不同)破基岩如果提示缺少mod:bedrock-miner,请安装。</li>
+		  <li>破末地传送门框架以及末地门，在\config\bedrockminer.json中的blockWhitelist添加:末地门框架"minecraft:end_portal_frame"，或末地门："minecraft:end_portal"</li>
+        </ul>
+        </div>
+      </section>
+
+      <section class="topic" id="t2-4">
+        <div class="topic-head">
+          <span class="num">04</span>
+          <h3>放置速度</h3>
+        </div>
+        <ul class="bullets">
+          <li>放置间隔：时间根据服务器不同，不建议低于 1。</li>
+          <li>如果打印的材料种类比较多容易出错，将放置间隔增加到 2 或者更高。</li>
+          <li>每刻放置方块：1（个人推荐）。</li>
+        </ul>
+        <div class="note"><b>说明</b><span>「每刻放置方块 1」与放置间隔的具体数值均为原文的个人推荐，请以所在服务器的限制为准。</span></div>
+      </section>
+
+      <section class="topic" id="t2-5">
+        <div class="topic-head">
+          <span class="num">05</span>
+          <h3>破坏速度</h3>
+        </div>
+        <ul class="bullets">
+          <li>破坏间隔 1。</li>
+          <li>每刻破坏 5-10（个人推荐）。</li>
+          <li>tweakeroo打开自动切换工具。</li>
+        </ul>
+      </section>
+
+      <section class="topic" id="t2-6">
+        <div class="topic-head">
+          <span class="num">06</span>
+          <h3>其他</h3>
+        </div>
+        <ul class="bullets">
+          <li>三改、四改打印机，在某些方块白名单或黑名单中，可以直接使用中文，也可以使用注册名。</li>
+        </ul>
+        <div class="shot-grid">
+          <figure class="shot">
+            <img src="images/fig-10.png" width="688" height="118" alt="打印机设置中的「自定义限制模式：黑名单」与中文黑名单示例" loading="lazy" decoding="async">
+            <figcaption>图 8 · 自定义限制模式设为「黑名单」，自定义黑名单中直接填写中文（橡木原木、橡木木板）</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="images/fig-11.png" width="658" height="238" alt="打印机设置中的流体填充方块列表与流体列表，使用注册名" loading="lazy" decoding="async">
+            <figcaption>图 9 · 流体填充方块列表与流体列表中使用注册名（如 minecraft:sand、minecraft:water）</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="topic" id="speedy">
+        <div class="topic-head">
+          <span class="num">附</span>
+          <h3>参数速查</h3>
+        </div>
+        <p class="lead">以下数值均来自原文「放置速度」「破坏速度」两节，便于快速查阅。</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>项目</th><th>建议值</th><th>原文说明</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-label="项目">放置间隔</td>
+                <td data-label="建议值">不低于 1；推荐 1</td>
+                <td data-label="说明">不建议低于 1；推荐每刻放置方块 1（个人推荐）</td>
+              </tr>
+              <tr>
+                <td data-label="项目">放置间隔（材料多时）</td>
+                <td data-label="建议值">2 或更高</td>
+                <td data-label="说明">材料种类比较多、容易出错时，将放置间隔增加</td>
+              </tr>
+              <tr>
+                <td data-label="项目">破坏间隔</td>
+                <td data-label="建议值">1</td>
+                <td data-label="说明">原文直接给出破坏间隔 1</td>
+              </tr>
+              <tr>
+                <td data-label="项目">破坏速度</td>
+                <td data-label="建议值">每刻 5-10</td>
+                <td data-label="说明">个人推荐</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <footer class="footer">
+      <h4>整理说明</h4>
+      <ul>
+        <li>原文为 5 页 Word 文档，共 52 段、9 张界面截图；原文无表格，截图已按出现位置内嵌。另有后续补充技巧 6 条与附图 2 张（图 10、图 11），不计入原文统计；本页共 11 张附图。</li>
+        <li>原文编号存在错乱：投影部分「批量替换投影方块」为自动编号 6、「单人模式粘贴原理图」写作 7；打印机部分后三项的自动编号为 3、4、5。本页按语义整理，投影部分续编为 1–13，打印机部分为 1–6。</li>
+        <li>原文「匠放置间隔增加到 2 或者更高」中的「匠」疑为「将」，本页按「将」表述。</li>
+        <li>本页正文以原文内容为主；新增的 6 条补充技巧与 2 张附图来自后续补充，未加入其他原文之外的说法。操作路径中的箭头表示界面层级。</li>
+      </ul>
+    </footer>
+
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="查看原文截图">
+  <button class="lb-close" id="lbClose" aria-label="关闭图片">✕</button>
+  <img id="lbImg" src="" alt="">
+  <p id="lbCap"></p>
+</div>
+
+<script>
+(function () {
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
+  var menuBtn = document.getElementById('menuBtn');
+  var closeBtn = document.getElementById('closeBtn');
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('#nav a[href^="#t"], #nav a[href="#speedy"]'));
+  var labels = document.querySelectorAll('.nav-label');
+  var currentLabel = document.getElementById('currentLabel');
+  var progressBar = document.getElementById('progressBar');
+  var lightbox = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lbImg');
+  var lbCap = document.getElementById('lbCap');
+  var lbClose = document.getElementById('lbClose');
+
+  /* ---------- 移动端抽屉 ---------- */
+  function isMobile() {
+    return window.matchMedia('(max-width:1024px)').matches;
+  }
+  function openNav() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeNav() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    menuBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+  menuBtn.addEventListener('click', function () {
+    if (sidebar.classList.contains('open')) closeNav(); else openNav();
+  });
+  closeBtn.addEventListener('click', closeNav);
+  overlay.addEventListener('click', closeNav);
+  sidebar.addEventListener('click', function (e) {
+    if (e.target.closest('a') && isMobile()) closeNav();
+  });
+
+  /* ---------- 高亮当前章节 ---------- */
+  var targets = [];
+  navLinks.forEach(function (link) {
+    var el = document.getElementById(link.getAttribute('href').slice(1));
+    if (el) targets.push({ el: el, link: link });
+  });
+
+  var ticking = false;
+  function update() {
+    var docEl = document.documentElement;
+    var y = window.scrollY + (isMobile() ? 82 : 92);
+    var active = null;
+    for (var i = 0; i < targets.length; i++) {
+      var top = targets[i].el.getBoundingClientRect().top + window.scrollY;
+      if (top <= y) active = targets[i];
+      else break;
+    }
+    if (targets.length && window.scrollY + window.innerHeight >= docEl.scrollHeight - 4) {
+      active = targets[targets.length - 1];
+    }
+    navLinks.forEach(function (l) { l.classList.remove('active'); });
+    if (active) {
+      active.link.classList.add('active');
+      currentLabel.textContent = active.link.getAttribute('data-title') || active.link.textContent.trim();
+    } else {
+      currentLabel.textContent = '概览';
+    }
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    progressBar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+    ticking = false;
+  }
+  function requestUpdate() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }
+  window.addEventListener('scroll', requestUpdate, { passive: true });
+  window.addEventListener('resize', requestUpdate);
+  window.addEventListener('load', update);
+  update();
+
+  /* ---------- 图片灯箱 ---------- */
+  var shots = document.querySelectorAll('.shot img');
+  Array.prototype.forEach.call(shots, function (img) {
+    img.addEventListener('click', function () {
+      var fig = img.closest('figure');
+      var cap = fig ? fig.querySelector('figcaption') : null;
+      lbImg.src = img.currentSrc || img.src;
+      lbImg.alt = img.alt;
+      lbCap.textContent = cap ? cap.textContent : '';
+      lightbox.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      lbClose.focus();
+    });
+  });
+  function closeLightbox() {
+    lightbox.classList.remove('show');
+    if (!sidebar.classList.contains('open')) document.body.style.overflow = '';
+    lbImg.src = '';
+  }
+  lbClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function (e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (lightbox.classList.contains('show')) closeLightbox();
+      else if (sidebar.classList.contains('open')) closeNav();
+    }
+  });
+})();
+</script>
+</body>
+</html>

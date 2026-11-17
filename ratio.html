@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>比例计算</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --glow: rgba(78, 201, 176, 0.18);
+            --card: #ffffff;
+            --line: #e6e9ee;
+            --text: #1f2933;
+            --text-dim: #6b7785;
+            --accent: #2f9e7f;
+            --accent-soft: rgba(47, 158, 127, 0.10);
+            --field: #f7f9fb;
+            --shadow: 0 2px 10px rgba(23, 42, 58, 0.06);
+            --shadow-lg: 0 12px 28px rgba(23, 42, 58, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #171a1f;
+                --glow: rgba(78, 201, 176, 0.10);
+                --card: #22262d;
+                --line: #313741;
+                --text: #e8ebef;
+                --text-dim: #98a2ae;
+                --accent: #4ec9b0;
+                --accent-soft: rgba(78, 201, 176, 0.14);
+                --field: #1b1f25;
+                --shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+                --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.36);
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            padding: 20px 14px 40px;
+            background:
+                radial-gradient(900px 420px at 50% -180px, var(--glow), transparent 70%),
+                var(--bg);
+            color: var(--text);
+            font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app { width: 100%; max-width: 460px; margin: 0 auto; }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 2px 16px;
+        }
+
+        .back {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            color: var(--text-dim);
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .back:active { transform: scale(0.97); }
+
+        .title-wrap { min-width: 0; }
+
+        h1 {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sub {
+            font-size: 12.5px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            padding: 20px 16px 18px;
+        }
+
+        .field { display: block; margin-bottom: 14px; }
+
+        .field:last-of-type { margin-bottom: 0; }
+
+        .label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            height: 48px;
+            padding: 0 13px;
+            font: inherit;
+            font-size: 16px;
+            color: var(--text);
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            outline: none;
+            transition: border-color .18s, box-shadow .18s, background .18s;
+        }
+
+        input::placeholder { color: var(--text-dim); opacity: 0.7; }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            height: 26px;
+        }
+
+        .tip {
+            margin-top: 16px;
+            padding-top: 13px;
+            border-top: 1px dashed var(--line);
+            font-size: 12.5px;
+            line-height: 1.75;
+            color: var(--text-dim);
+        }
+
+        .tip code {
+            display: inline-block;
+            white-space: nowrap;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            color: var(--accent);
+            background: var(--accent-soft);
+            border-radius: 5px;
+            padding: 1px 5px;
+        }
+
+        .foot {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-dim);
+        }
+
+        .foot a { color: var(--accent); text-decoration: none; }
+
+        .foot a:hover { text-decoration: underline; }
+
+        @media (min-width: 560px) {
+            body { padding: 34px 20px 48px; }
+            h1 { font-size: 22px; }
+            .card { padding: 24px 22px 22px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            input, .back { transition: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="top">
+            <a class="back" href="index.html">← 工具箱</a>
+            <div class="title-wrap">
+                <h1>比例计算</h1>
+                <p class="sub">输入任意两项，自动补算第三项</p>
+            </div>
+        </div>
+
+        <main class="card">
+            <label class="field" for="ratio">
+                <span class="label">比例（万）</span>
+                <input type="number" id="ratio" inputmode="decimal" step="any" placeholder="例如 380">
+            </label>
+            <label class="field" for="amount">
+                <span class="label">金额</span>
+                <input type="number" id="amount" inputmode="decimal" step="any" placeholder="请输入金额">
+            </label>
+            <label class="field" for="virtualCurrency">
+                <span class="label">虚拟币（万）</span>
+                <input type="number" id="virtualCurrency" inputmode="decimal" step="any" placeholder="请输入虚拟币数量">
+            </label>
+
+            <p class="tip">
+                换算关系：<code>虚拟币 = 金额 × 比例 ÷ 100</code>，<code>金额 = 虚拟币 × 100 ÷ 比例</code>。<br>
+                修改其中一项时，另外两项会自动清空。
+            </p>
+        </main>
+
+        <p class="foot"><a href="countdown.html">→ 倒计时</a></p>
+    </div>
+
+    <script>
+        const ratioInput = document.getElementById('ratio');
+        const amountInput = document.getElementById('amount');
+        const virtualCurrencyInput = document.getElementById('virtualCurrency');
+
+        function calculate() {
+            const ratio = parseFloat(ratioInput.value);
+            const amount = parseFloat(amountInput.value);
+            const virtualCurrency = parseFloat(virtualCurrencyInput.value);
+
+            if (!isNaN(ratio) && ratio > 0) {
+                if (!isNaN(amount) && isNaN(virtualCurrency)) {
+                    virtualCurrencyInput.value = (amount * ratio / 100).toFixed(2);
+                } else if (!isNaN(virtualCurrency) && isNaN(amount)) {
+                    amountInput.value = (virtualCurrency * 100 / ratio).toFixed(2);
+                }
+            }
+        }
+
+        ratioInput.addEventListener('input', () => {
+            // 清空其他输入框
+            amountInput.value = '';
+            virtualCurrencyInput.value = '';
+            calculate();
+        });
+        amountInput.addEventListener('input', () => {
+            virtualCurrencyInput.value = '';
+            calculate();
+        });
+        virtualCurrencyInput.addEventListener('input', () => {
+            amountInput.value = '';
+            calculate();
+        });
+    </script>
+</body>
+
+</html>

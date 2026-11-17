@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC村民交易所附魔检测</title>
+    <style>
+        *{box-sizing: border-box;margin:0;padding:0;font-family:system-ui}
+        body{background:#1e1e1e;color:#eee;padding:16px;max-width:1200px;margin:0 auto}
+        h1{text-align:center;margin-bottom:20px;color:#4ec9b0;font-size:22px}
+        .container{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        @media(max-width:700px){.container{grid-template-columns:1fr}}
+        .panel{background:#2d2d2d;padding:16px;border-radius:8px;margin-bottom:12px}
+        textarea{width:100%;min-height:120px;background:#383838;color:#fff;border:1px solid #555;padding:10px;border-radius:6px;font-size:15px;resize:vertical}
+        .title{font-size:17px;margin-bottom:10px;color:#82c9ff;font-weight:bold}
+        .item{padding:4px 6px;margin:3px 0;border-radius:4px;font-size:14px}
+        .have{background:#275430}
+        .miss{background:#602828}
+        .tip{color:#aaa;font-size:13px;margin:8px 0}
+        button{padding:6px 12px;background:#3b6ea8;color:#fff;border:none;border-radius:4px;margin-top:8px;cursor:pointer}
+        button:hover{background:#4b84c7}
+    </style>
+</head>
+<body>
+<h1>MC村民交易所附魔检测工具</h1>
+<div class="panel">
+    <div class="title">输入已拥有附魔（换行/空格/,/，分隔）</div>
+    <textarea id="inputBox" placeholder="示例：
+亡灵杀手,经验修补 横扫之刃，快速装填"></textarea>
+    <div class="tip">严格模式默认开启：仅完整名称 / 预设别名可匹配；宽松模式开启后允许片段匹配（会有批量误匹配风险）</div>
+    <div style="margin-top:8px;">
+        <label><input type="checkbox" id="looseMode"> 宽松模式（片段模糊匹配，慎用）</label>
+    </div>
+</div>
+
+<div class="container">
+    <div class="panel">
+        <div class="title">✅已匹配到的附魔</div>
+        <div id="haveList"></div>
+    </div>
+    <div class="panel">
+        <div class="title">❌还缺少的附魔（找村民刷这些）</div>
+        <div id="missList"></div>
+        <button id="copyMissBtn">一键复制缺失附魔</button>
+    </div>
+</div>
+
+<script>
+// 完整附魔库，name标准全名，alias预设简写别名
+const enchantData = [
+    {name:"保护",alias:["保护"]},
+    {name:"火焰保护",alias:["火焰"]},
+    {name:"爆炸保护",alias:["爆炸"]},
+    {name:"弹射物保护",alias:["弹射","弹射物"]},
+    {name:"摔落缓冲",alias:["摔落","缓冲"]},
+    {name:"荆棘",alias:["荆棘"]},
+    {name:"水下呼吸",alias:["水下呼吸","呼吸"]},
+    {name:"水下速掘",alias:["水下速掘","速掘","水下挖掘","挖掘"]},
+    {name:"深海探索者",alias:["深海","探索","深海探索"]},
+    {name:"冰霜行者",alias:["冰霜","行者"]},
+    {name:"锋利",alias:["锋利"]},
+    {name:"亡灵杀手",alias:["亡灵"]},
+    {name:"节肢杀手",alias:["节肢"]},
+    {name:"击退",alias:["击退"]},
+    {name:"火焰附加",alias:["附加"]},
+    {name:"抢夺",alias:["抢夺"]},
+    {name:"横扫之刃",alias:["横扫"]},
+    {name:"效率",alias:["效率"]},
+    {name:"精准采集",alias:["精准","采集"]},
+    {name:"耐久",alias:["耐久"]},
+    {name:"力量",alias:["力量"]},
+    {name:"冲击",alias:["冲击"]},
+    {name:"火矢",alias:["火矢"]},
+    {name:"无限",alias:["无限"]},
+    {name:"快速装填",alias:["快速","装填"]},
+    {name:"多重射击",alias:["多重","射击"]},
+    {name:"穿透",alias:["穿透"]},
+    {name:"海之眷顾",alias:["海之眷顾","海之","眷顾"]},
+    {name:"饵钓",alias:["饵钓"]},
+    {name:"经验修补",alias:["经验","修补"]},
+    {name:"消失诅咒",alias:["消失"]},
+    {name:"绑定诅咒",alias:["绑定"]},
+    {name:"忠诚",alias:["忠诚"]},
+    {name:"穿刺",alias:["穿刺"]},
+    {name:"引雷",alias:["引雷"]},
+    {name:"激流",alias:["激流"]},
+    {name:"风爆",alias:["风爆"]},
+    {name:"致密",alias:["致密"]},
+    {name:"破甲",alias:["破甲"]},
+    {name:"突进",alias:["突进"]}
+];
+
+const inputBox = document.getElementById('inputBox');
+const haveList = document.getElementById('haveList');
+const missList = document.getElementById('missList');
+const looseMode = document.getElementById('looseMode');
+const copyMissBtn = document.getElementById('copyMissBtn');
+
+let missCache = [];
+
+function matchEnchant(userText){
+    const userLines = userText.split(/[\n ,，]+/).map(s=>s.trim()).filter(s=>s);
+    let matchedSet = new Set();
+
+    for(let line of userLines){
+        for(let e of enchantData){
+            let hit = false;
+            if(looseMode.checked){
+                // 宽松：名字包含片段 或 别名片段匹配
+                hit = e.name.includes(line) || e.alias.some(a=>a.includes(line));
+            }else{
+                // 严格模式：全名完全相等 或者 别名完全匹配
+                hit = (e.name === line) || e.alias.some(a => a === line);
+            }
+            if(hit){
+                matchedSet.add(e.name);
+            }
+        }
+    }
+
+    const allNames = enchantData.map(i=>i.name);
+    const haveArr = Array.from(matchedSet);
+    missCache = allNames.filter(n=>!matchedSet.has(n));
+
+    haveList.innerHTML = haveArr.map(x=>`<div class="item have">${x}</div>`).join('');
+    missList.innerHTML = missCache.map(x=>`<div class="item miss">${x}</div>`).join('');
+}
+
+// 复制缺失列表
+copyMissBtn.addEventListener('click',async ()=>{
+    await navigator.clipboard.writeText(missCache.join('\n'));
+    alert("已复制缺失附魔到剪贴板");
+});
+
+inputBox.addEventListener('input',()=>matchEnchant(inputBox.value));
+looseMode.addEventListener('change',()=>matchEnchant(inputBox.value));
+
+matchEnchant("");
+</script>
+</body>
+</html>

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大盗宝藏计算器 · iKnowMC 工具箱</title>
+<script src="js/jquery.min.js"></script>
+<style>
+    :root {
+        --bg: #f0f2f5;
+        --glow: rgba(78, 201, 176, 0.18);
+        --card: #ffffff;
+        --line: #e6e9ee;
+        --text: #1f2933;
+        --text-dim: #6b7785;
+        --accent: #2f9e7f;
+        --accent-soft: rgba(47, 158, 127, 0.10);
+        --field: #f7f9fb;
+        --shadow: 0 2px 10px rgba(23, 42, 58, 0.06);
+        --shadow-lg: 0 12px 28px rgba(23, 42, 58, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #171a1f;
+            --glow: rgba(78, 201, 176, 0.10);
+            --card: #22262d;
+            --line: #313741;
+            --text: #e8ebef;
+            --text-dim: #98a2ae;
+            --accent: #4ec9b0;
+            --accent-soft: rgba(78, 201, 176, 0.14);
+            --field: #1b1f25;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+            --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.36);
+        }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+        min-height: 100vh;
+        padding: 20px 14px 36px;
+        background:
+            radial-gradient(900px 420px at 50% -180px, var(--glow), transparent 70%),
+            var(--bg);
+        color: var(--text);
+        font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+        line-height: 1.5;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .app { width: 100%; max-width: 820px; margin: 0 auto; }
+
+    .top { display: flex; align-items: center; gap: 10px; margin: 2px 2px 16px; }
+
+    .back {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        color: var(--text-dim);
+        font-size: 13px;
+        text-decoration: none;
+    }
+
+    .back:active { transform: scale(0.97); }
+
+    .title-wrap { min-width: 0; }
+
+    h1 {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sub { font-size: 12.5px; color: var(--text-dim); }
+
+    .tabs { margin-bottom: 14px; }
+
+    .tablist {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .buttonitem { display: flex; min-width: 0; }
+
+    .buttonlistitem {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 46px;
+        padding: 0 8px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        transition: background .18s, border-color .18s, color .18s, transform .12s;
+    }
+
+    .buttonlistitem:active { transform: scale(0.98); }
+
+    .buttonitem.active .buttonlistitem {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(47, 158, 127, 0.26);
+    }
+
+    #content {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        padding: 18px 14px 20px;
+        min-height: 260px;
+    }
+
+    .intro { padding: 34px 10px; text-align: center; }
+
+    .intro h2 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+
+    .intro p { font-size: 13.5px; color: var(--text-dim); line-height: 1.7; }
+
+    input, select { font: inherit; color: var(--text); }
+
+    /* 九宫 */
+    #jg_table {
+        margin: 0 auto;
+        border-collapse: separate;
+        border-spacing: 6px;
+    }
+
+    #jg_table .jgtd { width: 58px; height: 58px; padding: 0; }
+
+    .jginput {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 52px;
+        padding: 0;
+        font-size: 20px;
+        font-weight: 600;
+        text-align: center;
+        color: var(--text);
+        background: var(--field);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        outline: none;
+    }
+
+    /* 等差数列 */
+    .dc-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .dc-table th,
+    .dc-table td {
+        border: 1px solid var(--line);
+        text-align: center;
+        padding: 2px;
+        font-size: 12px;
+    }
+
+    .dc-table th {
+        font-weight: 600;
+        color: var(--text-dim);
+        background: var(--accent-soft);
+        padding: 6px 2px;
+    }
+
+    .dc-table th:first-child,
+    .dc-table td:first-child { width: 44px; }
+
+    .dc-table td:focus-within { background: var(--accent-soft); }
+
+    .dcinput {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        padding: 0;
+        font-size: 16px;
+        text-align: center;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        outline: none;
+    }
+
+    /* 公式 */
+    .gs-grid { display: grid; gap: 8px; }
+
+    .gs-row {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+    }
+
+    .gs-label {
+        text-align: right;
+        font-size: 13px;
+        color: var(--text-dim);
+    }
+
+    .gsinput {
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        padding: 0 12px;
+        font-size: 16px;
+        color: var(--text);
+        background: var(--field);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        outline: none;
+    }
+
+    .gsinput:focus,
+    .jginput:focus,
+    .eq-row .num:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    /* 两数大小 */
+    .eq-list { display: grid; gap: 10px; }
+
+    .eq-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        background: var(--field);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+    }
+
+    .eq-row .num {
+        flex: 1 1 66px;
+        width: auto;
+        min-width: 0;
+        height: 42px;
+        padding: 0 10px;
+        font-size: 16px;
+        text-align: center;
+        color: var(--text);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        outline: none;
+    }
+
+    .eq-row select {
+        flex: none;
+        height: 42px;
+        padding: 0 8px;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        outline: none;
+    }
+
+    .eq-word { flex: none; font-size: 13.5px; color: var(--text-dim); }
+
+    /* 通用按钮与结果 */
+    .calc-btn {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin: 16px 0 12px;
+        font: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent);
+        border: 0;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 6px 16px rgba(47, 158, 127, 0.22);
+        transition: transform .12s, filter .18s;
+    }
+
+    .calc-btn:active { transform: scale(0.99); filter: brightness(0.96); }
+
+    .value-box {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        min-height: 52px;
+        padding: 12px 14px;
+        background: var(--field);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        word-break: break-all;
+    }
+
+    .value-label { flex: none; font-size: 13px; color: var(--text-dim); }
+
+    .value-num {
+        flex: 1;
+        min-width: 0;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--accent);
+    }
+
+    @media (min-width: 560px) {
+        body { padding: 34px 20px 44px; }
+        h1 { font-size: 22px; }
+        .tablist { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        #content { padding: 24px 22px 26px; }
+        .dc-table th, .dc-table td { font-size: 13px; }
+        .dc-table th:first-child, .dc-table td:first-child { width: 52px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .buttonlistitem, .calc-btn, .back { transition: none; }
+    }
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="top">
+        <a class="back" href="index.html">← 工具箱</a>
+        <div class="title-wrap">
+            <h1>大盗宝藏计算器</h1>
+            <p class="sub">九宫 · 等差数列 · 公式 · 两数大小</p>
+        </div>
+    </div>
+
+    <nav class="tabs" aria-label="计算工具">
+        <ul class="tablist" role="tablist">
+            <li id="jg" class="buttonitem" role="presentation"><button class="buttonlistitem" type="button" role="tab" aria-selected="false">九宫</button></li>
+            <li id="dc" class="buttonitem" role="presentation"><button class="buttonlistitem" type="button" role="tab" aria-selected="false">等差数列</button></li>
+            <li id="gs" class="buttonitem" role="presentation"><button class="buttonlistitem" type="button" role="tab" aria-selected="false">公式计算值</button></li>
+            <li id="bigger" class="buttonitem" role="presentation"><button class="buttonlistitem" type="button" role="tab" aria-selected="false">2数大小计算值</button></li>
+        </ul>
+    </nav>
+
+    <main id="content">
+        <div id="hello" class="intro">
+            <h2>大盗宝藏计算器</h2>
+            <p>从上方选择一种计算方式：九宫定位、等差数列补齐、公式计算、两数大小推算。</p>
+        </div>
+
+        <div id="jg_content" style="display:none;">
+            <div>
+                <table id="jg_table">
+                    <tr>
+                        <td class="jgtd"><input id="jg_data1" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td class="jgtd"><input id="jg_data2" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td class="jgtd"><input id="jg_data3" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                    </tr>
+                    <tr>
+                        <td class="jgtd"><input id="jg_data4" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td class="jgtd"><input id="jg_data5" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td class="jgtd"><input id="jg_data6" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                    </tr>
+                    <tr>
+                        <td class="jgtd"><input id="jg_data7" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td class="jgtd"><input id="jg_data8" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td class="jgtd"><input id="jg_data9" class="jginput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                    </tr>
+                </table>
+            </div>
+            <button id="jg_button" class="calc-btn" type="button">计算</button>
+            <div class="value-box">
+                <span class="value-label">值</span>
+                <span id="jg_value" class="value-num"></span>
+            </div>
+        </div>
+
+        <div id="dc_content" style="display:none;">
+            <div>
+                <table class="dc-table">
+                    <tr>
+                        <th>位置</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th>6</th>
+                    </tr>
+                    <tr>
+                        <td>值</td>
+                        <td><input class="dcinput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td><input class="dcinput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td><input class="dcinput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td><input class="dcinput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td><input class="dcinput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                        <td><input class="dcinput" type="text" inputmode="numeric" autocomplete="off"/></td>
+                    </tr>
+                </table>
+            </div>
+            <button id="dc_button" class="calc-btn" type="button">计算</button>
+            <div class="value-box">
+                <span class="value-label">值</span>
+                <span id="dc_value" class="value-num"></span>
+            </div>
+        </div>
+
+        <div id="gs_content" style="display:none;">
+            <div class="gs-grid">
+                <label class="gs-row"><span class="gs-label">1</span><input id="gs_data1" class="gsinput" type="text" inputmode="numeric" autocomplete="off"/></label>
+                <label class="gs-row"><span class="gs-label">2</span><input id="gs_data2" class="gsinput" type="text" inputmode="numeric" autocomplete="off"/></label>
+                <label class="gs-row"><span class="gs-label">3</span><input id="gs_data3" class="gsinput" type="text" inputmode="numeric" autocomplete="off"/></label>
+                <label class="gs-row"><span class="gs-label">4</span><input id="gs_data4" class="gsinput" type="text" inputmode="numeric" autocomplete="off"/></label>
+                <label class="gs-row"><span class="gs-label">5</span><input id="gs_data5" class="gsinput" type="text" inputmode="numeric" autocomplete="off"/></label>
+                <label class="gs-row"><span class="gs-label">公式</span><input id="gs_data6" class="gsinput" type="text" autocomplete="off"/></label>
+            </div>
+            <button id="gs_button" class="calc-btn" type="button">计算</button>
+            <div class="value-box">
+                <span class="value-label">值</span>
+                <span id="gs_value" class="value-num"></span>
+            </div>
+        </div>
+
+        <div id="bigger_content" style="display:none;">
+            <div class="eq-list">
+                <div class="eq-row">
+                    <input id="big_grp1_1" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <span class="eq-word">是</span>
+                    <input id="big_grp1_2" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                </div>
+                <div class="eq-row">
+                    <input id="big_grp2_1" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <span class="eq-word">比</span>
+                    <input id="big_grp2_2" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <select id="big_grp2_3">
+                        <option value="1" selected>大</option>
+                        <option value="-1">小</option>
+                    </select>
+                    <input id="big_grp2_4" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                </div>
+                <div class="eq-row">
+                    <input id="big_grp3_1" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <span class="eq-word">比</span>
+                    <input id="big_grp3_2" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <select id="big_grp3_3">
+                        <option value="1" selected>大</option>
+                        <option value="-1">小</option>
+                    </select>
+                    <input id="big_grp3_4" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                </div>
+                <div class="eq-row">
+                    <input id="big_grp4_1" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <span class="eq-word">比</span>
+                    <input id="big_grp4_2" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <select id="big_grp4_3">
+                        <option value="1" selected>大</option>
+                        <option value="-1">小</option>
+                    </select>
+                    <input id="big_grp4_4" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                </div>
+                <div class="eq-row">
+                    <input id="big_grp5_1" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <span class="eq-word">比</span>
+                    <input id="big_grp5_2" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <select id="big_grp5_3">
+                        <option value="1" selected>大</option>
+                        <option value="-1">小</option>
+                    </select>
+                    <input id="big_grp5_4" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                </div>
+                <div class="eq-row">
+                    <input id="big_grp6_1" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <span class="eq-word">比</span>
+                    <input id="big_grp6_2" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                    <select id="big_grp6_3">
+                        <option value="1" selected>大</option>
+                        <option value="-1">小</option>
+                    </select>
+                    <input id="big_grp6_4" class="num" type="text" inputmode="numeric" autocomplete="off"/>
+                </div>
+            </div>
+            <button id="bigger_button" class="calc-btn" type="button">计算</button>
+            <div class="value-box">
+                <span class="value-label">值</span>
+                <span id="bigger_value" class="value-num"></span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+        function hidecontent()
+        {
+            $("#content").contents().each((index,elem)=>{
+                $(elem).hide();
+            });
+        }
+
+        $(function(){
+            $("#jg").click(function(){
+                //$("#hello").hide();
+                hidecontent();
+                $("#jg_content").show();
+            });
+
+            $("#dc").click(function(){
+                //$("#hello").hide();
+                hidecontent();
+                $("#dc_content").show();
+            });
+
+            $("#gs").click(function(){
+                //$("#hello").hide();
+                hidecontent();
+                $("#gs_content").show();
+            });
+
+            $("#bigger").click(function(){
+                //$("#hello").hide();
+                hidecontent();
+                $("#bigger_content").show();
+            });
+
+            $("#jg_button").click(function(){
+                var matchs=[
+                            [2,9,4,7,5,3,6,1,8],
+                            [6,7,2,1,5,9,8,3,4],
+                            [8,1,6,3,5,7,4,9,2],
+                            [4,3,8,9,5,1,2,7,6],
+                            [4,9,2,3,5,7,8,1,6],
+                            [8,3,4,1,5,9,6,7,2],
+                            [6,1,8,7,5,3,2,9,4],
+                            [2,7,6,9,5,1,4,3,8]
+                        ];
+                        
+                var elements=Array.from($("#jg_table")[0].getElementsByTagName("input"));
+                var values=[];
+                elements.forEach(element=>{
+                    values.push(element.value);
+                });
+
+                
+                for(var index = 0;index<8;index++)
+                {
+                    var vv = matchs[index];
+                    var match =true;
+                    var value = 0;
+                    for(var i=0;i<9;i++)
+                    {
+                        match =true;
+                        if(values[i]==='')
+                            value=value*10+vv[i];
+                        else if(parseInt(values[i])===vv[i])
+                            continue;
+                        else
+                        {
+                            value=0;
+                            match=false;
+                            break;
+                        }
+                    }
+                    $("#jg_value")[0].innerHTML=value;
+                    if(match)
+                        break;
+                }
+            });
+        
+            $("#dc_button").click(function(){
+                var contents =  Array.from($("#dc_content")[0].getElementsByTagName("input"));
+                var values = [];
+                contents.forEach(content=>{
+                    values.push(content.value);
+                })
+
+                var firstindex =-1;
+                var first =0;
+                var secondindex = -1;
+                var second =0;
+                for(var i=0;i<6;i++)
+                {
+                    if(values[i]!="")
+                    {
+                        if(firstindex==-1)
+                        {
+                            firstindex = i;
+                            first = parseInt(values[i]);
+                        }
+                        else
+                        {
+                            secondindex = i;
+                            second = parseInt(values[i]);
+                            break;
+                        }
+                    }
+                }
+
+                var dc_value = first+(second-first)/(secondindex-firstindex)*(6-firstindex);
+                $("#dc_value").text(dc_value);
+            });
+           
+            $("#gs_button").click(function(){
+                var gs = $("#gs_data6").val();
+                gs = gs.replace(/((?<!#)\d)/,"#$1");
+                gs = gs.replace(/((?<!#)\d)/,"#$1");
+                gs = gs.replace(/((?<!#)\d)/,"#$1");
+                gs = gs.replace(/((?<!#)\d)/,"#$1");
+                gs = gs.replace(/((?<!#)\d)/,"#$1");
+                gs = gs.replace("x","*");
+                gs = gs.replace("X","*");
+                gs = gs.replace("（","(");
+                gs = gs.replace("）",")");
+                
+                gs = gs.replace("#1", $("#gs_data1").val());
+                gs = gs.replace("#2", $("#gs_data2").val());
+                gs = gs.replace("#3", $("#gs_data3").val());
+                gs = gs.replace("#4", $("#gs_data4").val());
+                gs = gs.replace("#5", $("#gs_data5").val());
+                $("#gs_value").text(eval(gs));
+            });
+        
+            $("#bigger_button").click(function(){
+                var items=["","","","","",""];
+                items[parseInt($("#big_grp1_1").val())-1] = $("#big_grp1_2").val();
+                var conditions =[];
+                conditions.push([a=parseInt($("#big_grp2_1").val()),parseInt($("#big_grp2_2").val()),
+                    parseInt($("#big_grp2_3").val()),parseInt($("#big_grp2_4").val()),0]);
+
+                conditions.push([a=parseInt($("#big_grp3_1").val()),parseInt($("#big_grp3_2").val()),
+                    parseInt($("#big_grp3_3").val()),parseInt($("#big_grp3_4").val()),0]);
+
+                conditions.push([a=parseInt($("#big_grp4_1").val()),parseInt($("#big_grp4_2").val()),
+                    parseInt($("#big_grp4_3").val()),parseInt($("#big_grp4_4").val()),0]);
+
+                conditions.push([a=parseInt($("#big_grp5_1").val()),parseInt($("#big_grp5_2").val()),
+                    parseInt($("#big_grp5_3").val()),parseInt($("#big_grp5_4").val()),0]);
+            
+                conditions.push([a=parseInt($("#big_grp6_1").val()),parseInt($("#big_grp6_2").val()),
+                    parseInt($("#big_grp6_3").val()),parseInt($("#big_grp6_4").val()),0]);
+
+                //alert(conditions);
+                var usedcount = 0;
+                while(usedcount<5)
+                {
+                    for(var i=0;i<5;i++)
+                    {
+                        if(conditions[i][4]==1)
+                            continue;
+
+                        if(items[conditions[i][0]-1]!="")
+                        {
+                            items[conditions[i][1]-1] = (parseInt(items[conditions[i][0]-1])+(-1*conditions[i][2])*conditions[i][3]).toString();
+                            conditions[i][4] =1;
+                            usedcount++;
+                        }
+                        else if(items[conditions[i][1]-1]!="")
+                        {
+                            items[conditions[i][0]-1] = (parseInt(items[conditions[i][1]-1])+(conditions[i][2])*conditions[i][3]).toString();
+                            conditions[i][4] =1;
+                            usedcount++;
+                        }
+                    }
+                }
+                var big_value="";
+                items.forEach(x=>{
+                    big_value+=x;
+                });
+                $("#bigger_value").text(big_value);
+            });
+
+            /* 仅界面层：同步标签页高亮状态，不参与任何计算 */
+            $(".tablist .buttonitem").on("click", function(){
+                $(".tablist .buttonitem").removeClass("active").find(".buttonlistitem").attr("aria-selected","false");
+                $(this).addClass("active").find(".buttonlistitem").attr("aria-selected","true");
+            });
+        
+        });
+</script>
+</body>
+</html>

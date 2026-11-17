@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒计时</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --glow: rgba(78, 201, 176, 0.18);
+            --card: #ffffff;
+            --line: #e6e9ee;
+            --text: #1f2933;
+            --text-dim: #6b7785;
+            --accent: #2f9e7f;
+            --accent-soft: rgba(47, 158, 127, 0.10);
+            --field: #f7f9fb;
+            --warn: #c98118;
+            --warn-soft: rgba(201, 129, 24, 0.12);
+            --danger: #d64545;
+            --danger-soft: rgba(214, 69, 69, 0.11);
+            --shadow: 0 2px 10px rgba(23, 42, 58, 0.06);
+            --shadow-lg: 0 12px 28px rgba(23, 42, 58, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #171a1f;
+                --glow: rgba(78, 201, 176, 0.10);
+                --card: #22262d;
+                --line: #313741;
+                --text: #e8ebef;
+                --text-dim: #98a2ae;
+                --accent: #4ec9b0;
+                --accent-soft: rgba(78, 201, 176, 0.14);
+                --field: #1b1f25;
+                --warn: #e0a33f;
+                --warn-soft: rgba(224, 163, 63, 0.16);
+                --danger: #f07171;
+                --danger-soft: rgba(240, 113, 113, 0.16);
+                --shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+                --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.36);
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            padding: 20px 14px 36px;
+            background:
+                radial-gradient(900px 420px at 50% -180px, var(--glow), transparent 70%),
+                var(--bg);
+            color: var(--text);
+            font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        /* 对齐舞台：占满整行，计时器列在其中左 / 中 / 右停靠 */
+        #stage {
+            display: flex;
+            width: 100%;
+        }
+
+        #stage.align-left { justify-content: flex-start; }
+        #stage.align-center { justify-content: center; }
+        #stage.align-right { justify-content: flex-end; }
+
+        #container {
+            width: 100%;
+            max-width: 460px;
+            min-width: 0;
+        }
+
+        /* ---------- 顶部 ---------- */
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 2px 14px;
+        }
+
+        .back {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            color: var(--text-dim);
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .back:active { transform: scale(0.97); }
+
+        .title-wrap { min-width: 0; }
+
+        h1 {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sub {
+            font-size: 12.5px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---------- 工具栏 ---------- */
+        .bar {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .seg {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            padding: 4px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .seg-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-width: 0;
+            min-height: 40px;
+            padding: 0 6px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            background: transparent;
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .18s, color .18s, box-shadow .18s;
+        }
+
+        .seg-btn:hover { color: var(--text); }
+
+        .seg-btn[aria-pressed="true"] {
+            color: #fff;
+            background: var(--accent);
+            box-shadow: 0 4px 12px rgba(47, 158, 127, 0.28);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-width: 0;
+            min-height: 44px;
+            padding: 0 4px;
+            font: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.2;
+            color: #fff;
+            background: var(--accent);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: transform .12s, filter .18s;
+        }
+
+        .action:active { transform: scale(0.97); }
+        .action:hover { filter: brightness(1.04); }
+
+        .action-add {
+            color: var(--accent);
+            background: var(--accent-soft);
+            border-color: rgba(47, 158, 127, 0.35);
+        }
+
+        .action-start { background: var(--accent); }
+        .action-reset { background: var(--warn); }
+        .action-clear { background: var(--danger); }
+
+        /* ---------- 计时器列表 ---------- */
+        #timers-container {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .timer-card {
+            padding: 11px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            transition: opacity .3s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+        .opacity-0 { opacity: 0; }
+
+        .hidden { display: none !important; }
+
+        .timer-body {
+            display: grid;
+            grid-template-columns: minmax(0, 116px) minmax(0, 1fr);
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .timer-side {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .timer-time {
+            width: 100%;
+            min-width: 0;
+            height: 100%;
+            min-height: 76px;
+            padding: 0 6px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 30px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--accent);
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            outline: none;
+            transition: border-color .25s, box-shadow .25s, color .25s, background .25s;
+            -moz-appearance: textfield;
+        }
+
+        .timer-time::-webkit-outer-spin-button,
+        .timer-time::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .timer-time:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .timer-time:disabled {
+            opacity: 1;
+            -webkit-text-fill-color: var(--accent);
+            cursor: default;
+        }
+
+        .timer-time.timer-warning {
+            color: var(--danger);
+            background: var(--danger-soft);
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px var(--danger-soft);
+            animation: timer-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes timer-pulse {
+            0%, 100% { box-shadow: 0 0 0 3px var(--danger-soft); }
+            50% { box-shadow: 0 0 0 6px transparent; }
+        }
+
+        .timer-name {
+            width: 100%;
+            min-width: 0;
+            height: 38px;
+            padding: 0 10px;
+            font: inherit;
+            font-size: 16px;
+            color: var(--text);
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+
+        .timer-name:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .timer-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .timer-start,
+        .timer-reset {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 44px;
+            font-size: 15px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .18s, color .18s, transform .12s;
+        }
+
+        /* 单卡删除：默认中性色，只有悬停/聚焦才透出危险色，避免和「清空」的实心红混淆 */
+        .timer-remove {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0;
+            font-size: 14px;
+            color: var(--text-dim);
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .18s, color .18s, border-color .18s, transform .12s;
+        }
+
+        .timer-remove:hover {
+            color: var(--danger);
+            background: var(--danger-soft);
+            border-color: rgba(214, 69, 69, 0.45);
+        }
+
+        .timer-remove:active { transform: scale(0.96); }
+
+        .timer-remove:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .timer-start:active,
+        .timer-reset:active { transform: scale(0.96); }
+
+        .timer-start { color: var(--accent); background: var(--accent-soft); }
+        .timer-reset { color: var(--warn); background: var(--warn-soft); }
+
+        /* JS 会动态切换这几个类名，保留其视觉含义 */
+        .text-secondary { color: var(--accent); }
+        .bg-secondary\/10 { background: var(--accent-soft); }
+        .text-danger { color: var(--danger); }
+        .bg-danger\/10 { background: var(--danger-soft); }
+        .text-warning { color: var(--warn); }
+        .bg-warning\/10 { background: var(--warn-soft); }
+
+        /* ---------- 空状态 ---------- */
+        #empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 44px 10px;
+            color: var(--text-dim);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        #empty-state .fa {
+            font-size: 30px;
+            color: var(--text-dim);
+            opacity: 0.55;
+            margin-bottom: 8px;
+        }
+
+        /* ---------- 图标（本地绘制，无外链字体） ---------- */
+        .fa {
+            display: inline-block;
+            flex: none;
+            width: 1em;
+            height: 1em;
+            line-height: 1;
+            font-style: normal;
+        }
+
+        .fa::before {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: currentColor;
+            -webkit-mask: var(--ico) center / contain no-repeat;
+            mask: var(--ico) center / contain no-repeat;
+        }
+
+        .fa-play,
+        .fa-pause { width: 0.9em; height: 0.9em; }
+
+        .fa-play {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+        }
+
+        .fa-pause {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 5h4v14H6zM14 5h4v14h-4z'/%3E%3C/svg%3E");
+        }
+
+        .fa-refresh {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17.65 6.35A8 8 0 1 0 20 12h-2.1A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z'/%3E%3C/svg%3E");
+        }
+
+        .fa-plus {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z'/%3E%3C/svg%3E");
+        }
+
+        .fa-trash {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 4h6l.9 2H20v2H4V6h4.1L9 4zm-2 3h10l-.9 12.1a1 1 0 0 1-1 .9H8.9a1 1 0 0 1-1-.9L7 7z'/%3E%3C/svg%3E");
+        }
+
+        .fa-align-left {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 6h16v2H4zM4 11h11v2H4zM4 16h16v2H4z'/%3E%3C/svg%3E");
+        }
+
+        .fa-align-center {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 6h16v2H4zM7 11h10v2H7zM4 16h16v2H4z'/%3E%3C/svg%3E");
+        }
+
+        .fa-align-right {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 6h16v2H4zM9 11h11v2H9zM4 16h16v2H4z'/%3E%3C/svg%3E");
+        }
+
+        .fa-clock-o {
+            --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm1 4h-2v6l5 2.9 1-1.7-4-2.3V7z'/%3E%3C/svg%3E");
+        }
+
+        /* ---------- 底部 ---------- */
+        .foot {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-dim);
+        }
+
+        .foot a { color: var(--accent); text-decoration: none; }
+
+        .foot a:hover { text-decoration: underline; }
+
+        @media (max-width: 359px) {
+            .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (min-width: 520px) {
+            #container { max-width: 560px; }
+        }
+
+        @media (min-width: 560px) {
+            body { padding: 34px 20px 44px; }
+            h1 { font-size: 22px; }
+            .timer-body { grid-template-columns: 132px minmax(0, 1fr); }
+            .timer-time { font-size: 34px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .action, .seg-btn, .timer-card, .timer-time, .timer-start, .timer-reset, .timer-remove { transition: none; }
+            .timer-time.timer-warning { animation: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="stage" class="align-center">
+        <div id="container">
+            <div class="top">
+                <a class="back" href="index.html">← 工具箱</a>
+                <div class="title-wrap">
+                    <h1>倒计时</h1>
+                    <p class="sub">可同时运行多个计时器，结束时自动循环</p>
+                </div>
+            </div>
+
+            <!-- 顶部标题和控制区 -->
+            <header class="bar">
+                <div class="seg" role="group" aria-label="计时器对齐方式">
+                    <button id="align-left" type="button" class="seg-btn" data-align="left" aria-pressed="false">
+                        <i class="fa fa-align-left"></i> 局左
+                    </button>
+                    <button id="align-center" type="button" class="seg-btn" data-align="center" aria-pressed="true">
+                        <i class="fa fa-align-center"></i> 局中
+                    </button>
+                    <button id="align-right" type="button" class="seg-btn" data-align="right" aria-pressed="false">
+                        <i class="fa fa-align-right"></i> 居右
+                    </button>
+                </div>
+                <div class="actions">
+                    <button id="add-timer" type="button" class="action action-add">
+                        <i class="fa fa-plus"></i> 添加
+                    </button>
+                    <button id="start-all" type="button" class="action action-start">
+                        <i class="fa fa-play"></i> 全部开始
+                    </button>
+                    <button id="reset-all" type="button" class="action action-reset">
+                        <i class="fa fa-refresh"></i> 全部重置
+                    </button>
+                    <button id="clear-all" type="button" class="action action-clear">
+                        <i class="fa fa-trash"></i> 清空
+                    </button>
+                </div>
+            </header>
+
+            <!-- 计时器容器 -->
+            <main id="timers-container">
+                <!-- 初始为空，将通过 JavaScript 创建卡片 -->
+            </main>
+
+            <!-- 空状态提示 -->
+            <div id="empty-state" class="hidden">
+                <i class="fa fa-clock-o"></i>
+                <p>暂无计时器，请点击"添加"按钮创建</p>
+            </div>
+
+            <p class="foot"><a href="ratio.html">→ 比例计算</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ---------- 本地记忆 ----------
+        // 只保存「设定值」，不保存运行状态：刷新后一律回到待开始
+        const STORE_ALIGN = 'iknowmc.countdown.align';
+        const STORE_TIMERS = 'iknowmc.countdown.timers';
+        const ALIGN_MODES = ['left', 'center', 'right'];
+
+        // localStorage 在隐私模式 / 被禁用 / 配额满时可能直接抛错，这里探测一次
+        const store = (() => {
+            try {
+                const probe = '__iknowmc_probe__';
+                window.localStorage.setItem(probe, '1');
+                window.localStorage.removeItem(probe);
+                return window.localStorage;
+            } catch (err) {
+                return null;
+            }
+        })();
+
+        function readAlign() {
+            if (!store) return 'center';
+            try {
+                const saved = store.getItem(STORE_ALIGN);
+                return ALIGN_MODES.indexOf(saved) >= 0 ? saved : 'center';
+            } catch (err) {
+                return 'center';
+            }
+        }
+
+        // 返回 null 表示没有可用存档，调用方回退到默认初始状态
+        function readTimers() {
+            if (!store) return null;
+            let raw = null;
+            try {
+                raw = store.getItem(STORE_TIMERS);
+            } catch (err) {
+                return null;
+            }
+            if (!raw) return null;
+
+            let data = null;
+            try {
+                data = JSON.parse(raw);
+            } catch (err) {
+                return null; // 存的是坏数据
+            }
+            if (!Array.isArray(data)) return null;
+
+            const list = [];
+            data.slice(0, 100).forEach(item => {
+                if (!item || typeof item !== 'object') return;
+                const name = typeof item.name === 'string' ? item.name : '';
+                const num = Number(item.seconds);
+                const seconds = isFinite(num) && num > 0 ? Math.min(Math.floor(num), 359999) : 0;
+                list.push({ name: name, seconds: seconds });
+            });
+            return list.length ? list : null;
+        }
+
+        function saveTimers() {
+            if (!store) return;
+            try {
+                const cards = Array.prototype.filter.call(
+                    document.querySelectorAll('.timer-card'),
+                    card => !card.dataset.removing
+                );
+                const list = cards.map(card => ({
+                    name: card.querySelector('.timer-name').value,
+                    seconds: Number(card.dataset.set) || 0
+                }));
+                store.setItem(STORE_TIMERS, JSON.stringify(list));
+            } catch (err) {
+                // 写入失败不影响页面使用
+            }
+        }
+
+        // 三档对齐：只切换 #stage 的对齐类，不触碰任何计时状态
+        const stage = document.getElementById('stage');
+        const alignBtns = Array.from(document.querySelectorAll('.seg-btn[data-align]'));
+
+        function setAlign(mode) {
+            if (ALIGN_MODES.indexOf(mode) < 0) mode = 'center';
+            stage.classList.remove('align-left', 'align-center', 'align-right');
+            stage.classList.add('align-' + mode);
+            alignBtns.forEach(btn => {
+                btn.setAttribute('aria-pressed', btn.dataset.align === mode ? 'true' : 'false');
+            });
+            if (store) {
+                try { store.setItem(STORE_ALIGN, mode); } catch (err) { /* 忽略写入失败 */ }
+            }
+        }
+
+        alignBtns.forEach(btn => {
+            btn.addEventListener('click', () => setAlign(btn.dataset.align));
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const timersContainer = document.getElementById('timers-container');
+            const addTimerBtn = document.getElementById('add-timer');
+            const startAllBtn = document.getElementById('start-all');
+            const clearAllBtn = document.getElementById('clear-all');
+            const emptyState = document.getElementById('empty-state');
+
+            let timerIdCounter = 0;
+            let timers = [];
+
+            // 恢复对齐档位（同时同步分段控件选中态）
+            setAlign(readAlign());
+
+            // 有存档就还原卡片（只还原设定值，保持待开始）；否则用默认 5 张
+            const savedTimers = readTimers();
+            if (savedTimers) {
+                savedTimers.forEach(item => createTimerCard(++timerIdCounter, item));
+            } else {
+                createTimerCard(++timerIdCounter);
+                createTimerCard(++timerIdCounter);
+                createTimerCard(++timerIdCounter);
+                createTimerCard(++timerIdCounter);
+                createTimerCard(++timerIdCounter);
+            }
+            checkEmptyState();
+
+            // 添加计时器
+            addTimerBtn.addEventListener('click', () => {
+                timerIdCounter++;
+                const newTimer = createTimerCard(timerIdCounter);
+                timersContainer.appendChild(newTimer);
+                checkEmptyState();
+                saveTimers();
+            });
+
+            // 一键开始
+            startAllBtn.addEventListener('click', () => {
+                document.querySelectorAll('.timer-card').forEach(card => {
+                    const timeInput = card.querySelector('.timer-time');
+                    const startBtn = card.querySelector('.timer-start');
+                    // 检查输入框是否有有效的值
+                    if (parseInt(timeInput.value) > 0 && startBtn.querySelector('i').classList.contains('fa-play')) {
+                        startBtn.click();
+                    }
+                });
+            });
+
+            // 一键清空
+            clearAllBtn.addEventListener('click', () => {
+                if (confirm('确定要清空所有计时器吗？')) {
+                    timers.forEach(timer => clearInterval(timer));
+                    timers = [];
+
+                    // 同步清掉本地存档，避免下次打开又冒出已删除的卡片
+                    if (store) {
+                        try { store.removeItem(STORE_TIMERS); } catch (err) { /* 忽略 */ }
+                    }
+
+                    const timerCards = document.querySelectorAll('.timer-card');
+                    timerCards.forEach(card => {
+                        card.dataset.removing = '1';
+                        card.classList.add('opacity-0');
+                        setTimeout(() => {
+                            card.remove();
+                            checkEmptyState();
+                        }, 300);
+                    });
+                }
+            });
+
+            // 创建计时器卡片（state 为存档项时只还原名称与设定秒数，不自动开始）
+            function createTimerCard(id, state) {
+                const card = document.createElement('div');
+                card.className = 'timer-card';
+                card.dataset.id = id;
+
+                card.innerHTML = `
+                  <div class="timer-body">
+                    <input type="number" inputmode="numeric" placeholder="" value="" class="timer-time">
+                    <div class="timer-side">
+                      <input type="text" placeholder="计时器名称" class="timer-name">
+                      <div class="timer-actions">
+                        <button type="button" title="开始 / 暂停" class="timer-start bg-secondary/10 text-secondary">
+                          <i class="fa fa-play"></i>
+                        </button>
+                        <button type="button" title="重置" class="timer-reset bg-warning/10 text-warning">
+                          <i class="fa fa-refresh"></i>
+                        </button>
+                        <button type="button" title="删除此计时器" class="timer-remove">
+                          <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+
+                // 设置初始状态
+                const nameInput = card.querySelector('.timer-name');
+                const timeInput = card.querySelector('.timer-time');
+                const hasState = !!state && typeof state === 'object';
+
+                nameInput.value = hasState && typeof state.name === 'string'
+                    ? state.name
+                    : `计时器 ${id}`;
+
+                const saved = hasState ? Math.floor(Number(state.seconds)) : 0;
+                const seconds = isFinite(saved) && saved > 0 ? saved : 0;
+                timeInput.value = seconds > 0 ? seconds : '';
+                card.dataset.set = seconds;
+
+                // 添加事件监听器
+                const resetBtn = card.querySelector('.timer-reset');
+                resetBtn.addEventListener('click', () => resetTimer(card));
+
+                const startBtn = card.querySelector('.timer-start');
+                startBtn.addEventListener('click', () => toggleTimer(card));
+
+                const removeBtn = card.querySelector('.timer-remove');
+                removeBtn.addEventListener('click', () => removeCard(card));
+
+                // 无障碍名称跟随计时器名称变化
+                function syncRemoveLabel() {
+                    const label = nameInput.value.trim() || `计时器 ${id}`;
+                    removeBtn.setAttribute('aria-label', `删除 ${label}`);
+                }
+                syncRemoveLabel();
+
+                timeInput.addEventListener('input', () => {
+                    if (timeInput.value < 1) timeInput.value = 1;
+                    card.dataset.set = Number(timeInput.value) || 0;
+                    saveTimers();
+                });
+
+                nameInput.addEventListener('input', () => {
+                    syncRemoveLabel();
+                    saveTimers();
+                });
+
+                // 添加到容器
+                timersContainer.appendChild(card);
+
+                // 添加动画效果
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, 10);
+
+                return card;
+            }
+
+            // 删除单张卡片：秒数未填写（未设定）直接删；已填写视为有内容，先确认
+            function removeCard(card) {
+                const nameInput = card.querySelector('.timer-name');
+                const configuredSeconds = Number(card.dataset.set) || 0;
+
+                if (configuredSeconds > 0) {
+                    const label = nameInput.value.trim() || `计时器 ${card.dataset.id}`;
+                    const ok = confirm(
+                        `确定删除「${label}」吗？\n` +
+                        `该计时器已设定 ${configuredSeconds} 秒，删除后不可恢复。`
+                    );
+                    if (!ok) return;
+                }
+
+                // 先停掉可能正在运行的倒计时
+                const timerId = card.dataset.timerId;
+                if (timerId) {
+                    clearInterval(Number(timerId));
+                    delete card.dataset.timerId;
+                    timers = timers.filter(t => t !== Number(timerId));
+                }
+
+                // 标记为删除中：保存时跳过它（DOM 还要留 300ms 做淡出）
+                card.dataset.removing = '1';
+                saveTimers();
+
+                card.classList.add('opacity-0');
+                setTimeout(() => {
+                    card.remove();
+                    checkEmptyState();
+                }, 300);
+            }
+
+            // 修改切换计时器状态函数
+            function toggleTimer(card) {
+                const startBtn = card.querySelector('.timer-start');
+                const icon = startBtn.querySelector('i');
+                const timeInput = card.querySelector('.timer-time');
+                const resetBtn = card.querySelector('.timer-reset');
+                const timerId = card.dataset.timerId;
+
+                if (timerId) {
+                    clearInterval(timerId);
+                    delete card.dataset.timerId;
+
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                    startBtn.classList.remove('bg-danger/10', 'text-danger');
+                    startBtn.classList.add('bg-secondary/10', 'text-secondary');
+                    timeInput.disabled = false;
+                    timeInput.classList.remove('timer-warning');
+                } else {
+                    const inputValue = timeInput.value;
+                    // 检查输入是否有效
+                    if (!inputValue || isNaN(inputValue) || parseInt(inputValue) < 1) {
+                        return;
+                    }
+
+                    let seconds = parseInt(inputValue);
+                    const initialSeconds = seconds;
+
+                    timeInput.value = seconds;
+
+                    // 记录初始值到重置按钮的属性中
+                    resetBtn.dataset.initialValue = initialSeconds;
+                    card.dataset.set = initialSeconds;
+                    saveTimers();
+
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                    startBtn.classList.remove('bg-secondary/10', 'text-secondary');
+                    startBtn.classList.add('bg-danger/10', 'text-danger');
+                    timeInput.disabled = true;
+
+                    const newTimerId = setInterval(() => {
+                        seconds--;
+
+                        // 处理倒计时结束
+                        if (seconds <= 0) {
+                            seconds = initialSeconds; // 重置为初始时间
+                        }
+
+                        // 处理倒计时警告
+                        if (initialSeconds >= 7 && seconds <= 2) {
+                            timeInput.classList.add('timer-warning');
+                        } else {
+                            timeInput.classList.remove('timer-warning');
+                        }
+
+                        timeInput.value = seconds;
+
+                    }, 1000);
+
+                    card.dataset.timerId = newTimerId;
+                    timers.push(newTimerId);
+                }
+            }
+
+            // 修改重置计时器函数
+            function resetTimer(card) {
+                const timeInput = card.querySelector('.timer-time');
+                const startBtn = card.querySelector('.timer-start');
+                const icon = startBtn.querySelector('i');
+                const resetBtn = card.querySelector('.timer-reset');
+
+                const timerId = card.dataset.timerId;
+                if (timerId) {
+                    clearInterval(timerId);
+                    delete card.dataset.timerId;
+                }
+
+                // 从重置按钮的属性中还原输入框的值
+                if (resetBtn.dataset.initialValue) {
+                    timeInput.value = resetBtn.dataset.initialValue;
+                } else {
+                    timeInput.value = '';
+                }
+
+                card.dataset.set = Number(timeInput.value) || 0;
+                saveTimers();
+
+                timeInput.disabled = false;
+                timeInput.classList.remove('timer-warning');
+
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+                startBtn.classList.remove('bg-danger/10', 'text-danger');
+                startBtn.classList.add('bg-secondary/10', 'text-secondary');
+            }
+
+            // 格式化时间
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            // 检查是否为空状态
+            function checkEmptyState() {
+                const timerCards = document.querySelectorAll('.timer-card');
+                if (timerCards.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex', 'flex-col', 'items-center', 'justify-center');
+                } else {
+                    emptyState.classList.add('hidden');
+                    emptyState.classList.remove('flex', 'flex-col', 'items-center', 'justify-center');
+                }
+            }
+
+            // 添加CSS动画
+            const style = document.createElement('style');
+            style.textContent = `
+        .timer-card {
+          opacity: 0;
+          transition: all 0.3s ease-out;
+        }
+      `;
+            document.head.appendChild(style);
+            // 获取全部重置按钮
+            const resetAllBtn = document.getElementById('reset-all');
+
+            // 全部重置按钮点击事件
+            resetAllBtn.addEventListener('click', () => {
+                document.querySelectorAll('.timer-card').forEach(card => {
+                    resetTimer(card);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

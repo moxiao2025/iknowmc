@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC我的世界附魔指令生成器（最终修正版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 20px;
+        }
+        .block {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+        .block h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .base-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .base-row > div {
+            flex: 1;
+            min-width: 200px;
+        }
+        select, button, input {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .group-ctrl {
+            margin: 8px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .group-ctrl button {
+            width: auto;
+            padding: 4px 12px;
+            margin: 0;
+        }
+        .enchant-group-title {
+            width: 100%;
+            grid-column: 1 / -1;
+            font-weight: bold;
+            color: #444;
+            margin: 12px 0 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px dashed #ddd;
+            display: flex;
+            align-items: center;
+        }
+		.enchant-group-title span{
+			margin-right:10px;
+		}
+        .enchant-wrap {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+        .enchant-item {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            background: #fafafa;
+            gap: 8px;
+            transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+        }
+        .enchant-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .level-input {
+            width: 70px !important;
+            margin: 0 !important;
+            text-align: center;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .check-input {
+            width: auto !important;
+            margin: 0 !important;
+        }
+        .level-input.warn {
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        /* 原版规则：互斥冲突高亮 */
+        .enchant-item.has-conflict {
+            border-color: #fda4af;
+            background: #fff1f2;
+            box-shadow: inset 3px 0 0 #e11d48;
+        }
+        .enchant-item.has-conflict .check-input {
+            accent-color: #e11d48;
+        }
+        .conflict-note {
+            flex: 1 1 100%;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #be123c;
+            background: #ffe4e6;
+            border-radius: 4px;
+            padding: 3px 6px;
+            word-break: break-word;
+        }
+        .conflict-note[hidden] {
+            display: none;
+        }
+        .conflict-summary {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #9f1239;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            border-left: 4px solid #e11d48;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin: 8px 0 4px;
+            word-break: break-word;
+        }
+        .conflict-summary[hidden] {
+            display: none;
+        }
+        .conflict-summary strong {
+            color: #881337;
+        }
+        .btn {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        .btn-copy {
+            background: #10b981;
+        }
+        .btn-copy:hover {
+            background: #059669;
+        }
+        .result-box {
+            background: #1e293b;
+            color: #22c55e;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: "Consolas", monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+        .tip {
+            color: #666;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+        .danger-tip {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>我的世界 附魔指令生成器</h1>
+
+        <div class="block">
+            <h3>基础设置</h3>
+            <div class="base-row">
+                <div>
+                    <label>规则模式</label>
+                    <select id="ruleMode">
+                        <option value="normal">原版附魔规则</option>
+                        <option value="ignore">无视所有规则</option>
+                    </select>
+                </div>
+                <div>
+                    <label>装备材质</label>
+                    <select id="materialSelect">
+                        <option value="diamond">钻石</option>
+                        <option value="netherite">下界合金</option>
+                    </select>
+                </div>
+                <div>
+                    <label>装备类型</label>
+                    <select id="equipType">
+                        <option value="">请选择装备</option>
+                        <optgroup label="▸ 盔甲">
+                            <option value="helmet">头盔</option>
+                            <option value="chestplate">胸甲</option>
+                            <option value="leggings">护腿</option>
+                            <option value="boots">靴子</option>
+                        </optgroup>
+                        <optgroup label="▸ 武器">
+                            <option value="sword">剑</option>
+                            <option value="axe">斧</option>
+                            <option value="bow">弓</option>
+                            <option value="crossbow">弩</option>
+                            <option value="trident">三叉戟</option>
+                            <option value="mace">重锤</option>
+                            <option value="spear">矛</option>
+                        </optgroup>
+                        <optgroup label="▸ 工具">
+                            <option value="pickaxe">镐</option>
+                            <option value="shovel">锹</option>
+                            <option value="hoe">锄</option>
+                            <option value="fishing_rod">钓鱼竿</option>
+                            <option value="shears">剪刀</option>
+                            <option value="shield">盾牌</option>
+                            <option value="elytra">鞘翅</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <h3>附魔等级设置</h3>
+            <p class="tip">勾选启用附魔，等级默认原版最大值；点击文字也可切换选中状态</p>
+            <div class="conflict-summary" id="conflictSummary" role="status" aria-live="polite" hidden></div>
+            <div class="enchant-wrap" id="enchantList"></div>
+            <button class="btn" id="generateBtn">生成附魔指令</button>
+        </div>
+
+        <div class="block">
+            <h3>生成结果</h3>
+            <div class="result-box" id="resultBox">等待生成指令...</div>
+            <button class="btn btn-copy" id="copyBtn" style="margin-top:10px;">一键复制指令</button>
+        </div>
+    </div>
+
+    <script>
+        const ENCHANT_DATA = [
+            // 重锤
+            {name:"风爆", id:"wind_burst", maxLv:3, conflict:[], equip:["mace"]},
+            {name:"致密", id:"density", maxLv:5, conflict:["breach","smite","bane_of_arthropods"], equip:["mace"]},
+            {name:"破甲", id:"breach", maxLv:4, conflict:["density","smite","bane_of_arthropods"], equip:["mace"]},
+			//矛
+			{name:"突进", id:"lunge", maxLv:3, conflict:[], equip:["spear"]},
+            // 保护类（四保护互斥）
+            {name:"保护", id:"protection", maxLv:4, conflict:["projectile_protection","blast_protection","fire_protection"], equip:["helmet","chestplate","leggings","boots"]},
+            {name:"弹射物保护", id:"projectile_protection", maxLv:4, conflict:["protection","blast_protection","fire_protection"], equip:["helmet","chestplate","leggings","boots"]},
+            {name:"爆炸保护", id:"blast_protection", maxLv:4, conflict:["protection","projectile_protection","fire_protection"], equip:["helmet","chestplate","leggings","boots"]},
+            {name:"火焰保护", id:"fire_protection", maxLv:4, conflict:["protection","projectile_protection","blast_protection"], equip:["helmet","chestplate","leggings","boots"]},
+			//帽子
+            {name:"水下呼吸", id:"respiration", maxLv:3, conflict:[], equip:["helmet"]},
+            {name:"水下速掘", id:"aqua_affinity", maxLv:1, conflict:[], equip:["helmet"]},
+			
+            {name:"荆棘", id:"thorns", maxLv:3, conflict:[], equip:["helmet","chestplate","leggings","boots"]},
+			//裤子
+            {name:"迅捷潜行", id:"swift_sneak", maxLv:3, conflict:[], equip:["leggings"]},
+
+            // 靴子：深海探索者 ↔ 冰霜行者
+            {name:"摔落缓冲", id:"feather_falling", maxLv:4, conflict:[], equip:["boots"]},
+            {name:"灵魂疾行", id:"soul_speed", maxLv:3, conflict:[], equip:["boots"]},
+            {name:"深海探索者", id:"depth_strider", maxLv:3, conflict:["frost_walker"], equip:["boots"]},
+            {name:"冰霜行者", id:"frost_walker", maxLv:2, conflict:["depth_strider"], equip:["boots"]},
+
+            // 剑/斧/重锤/矛 通用伤害附魔
+            {name:"锋利", id:"sharpness", maxLv:5, conflict:["smite","bane_of_arthropods"], equip:["sword","axe","spear"]},
+            {name:"亡灵杀手", id:"smite", maxLv:5, conflict:["sharpness","bane_of_arthropods","density","breach"], equip:["sword","axe","mace","spear"]},
+            {name:"节肢杀手", id:"bane_of_arthropods", maxLv:5, conflict:["sharpness","smite","density","breach"], equip:["sword","axe","mace","spear"]},
+			//剑专有横扫
+            {name:"横扫之刃", id:"sweeping_edge", maxLv:3, conflict:[], equip:["sword"]},
+			
+            {name:"火焰附加", id:"fire_aspect", maxLv:2, conflict:[], equip:["sword","mace"]},
+            {name:"击退", id:"knockback", maxLv:2, conflict:[], equip:["sword","spear"]},
+            {name:"抢夺", id:"looting", maxLv:3, conflict:[], equip:["sword","spear"]},
+
+            // 弓：无限 ↔ 经验修补
+            {name:"力量", id:"power", maxLv:5, conflict:[], equip:["bow"]},
+            {name:"火矢", id:"flame", maxLv:1, conflict:[], equip:["bow"]},
+            {name:"冲击", id:"punch", maxLv:2, conflict:[], equip:["bow"]},
+            {name:"无限", id:"infinity", maxLv:1, conflict:["mending"], equip:["bow"]},
+
+            // 弩：多重射击 ↔ 穿透
+            {name:"多重射击", id:"multishot", maxLv:1, conflict:["piercing"], equip:["crossbow"]},
+            {name:"穿透", id:"piercing", maxLv:4, conflict:["multishot"], equip:["crossbow"]},
+            {name:"快速装填", id:"quick_charge", maxLv:3, conflict:[], equip:["crossbow"]},
+
+            // 三叉戟：激流 ↔ 忠诚、引雷
+            {name:"引雷", id:"channeling", maxLv:1, conflict:["riptide"], equip:["trident"]},
+            {name:"穿刺", id:"impaling", maxLv:5, conflict:[], equip:["trident"]},
+            {name:"忠诚", id:"loyalty", maxLv:3, conflict:["riptide"], equip:["trident"]},
+            {name:"激流", id:"riptide", maxLv:3, conflict:["channeling","loyalty"], equip:["trident"]},
+
+            // 工具：时运 ↔ 精准采集
+            {name:"效率", id:"efficiency", maxLv:5, conflict:[], equip:["pickaxe","shovel","hoe","axe"]},
+            {name:"时运", id:"fortune", maxLv:3, conflict:["silk_touch"], equip:["pickaxe","shovel","hoe"]},
+            {name:"精准采集", id:"silk_touch", maxLv:1, conflict:["fortune"], equip:["pickaxe","shovel","hoe","shears"]},
+			//钓鱼竿
+            {name:"海之眷顾", id:"luck_of_the_sea", maxLv:3, conflict:[], equip:["fishing_rod"]},
+            {name:"饵钓", id:"lure", maxLv:3, conflict:[], equip:["fishing_rod"]},
+            // 全装备通用
+            {name:"耐久", id:"unbreaking", maxLv:3, conflict:[], equip:["all"]},
+            {name:"经验修补", id:"mending", maxLv:1, conflict:["infinity"], equip:["all"]},
+
+        ];
+
+        //物品ID
+        const ITEM_ID_MAP = {
+			//钻石
+            diamond: {
+                helmet: "minecraft:diamond_helmet",
+                chestplate: "minecraft:diamond_chestplate",
+                leggings: "minecraft:diamond_leggings",
+                boots: "minecraft:diamond_boots",
+                sword: "minecraft:diamond_sword",
+                axe: "minecraft:diamond_axe",
+                bow: "minecraft:bow",
+                crossbow: "minecraft:crossbow",
+                trident: "minecraft:trident",
+                mace: "minecraft:diamond_mace",
+                spear: "minecraft:diamond_spear",
+                pickaxe: "minecraft:diamond_pickaxe",
+                shovel: "minecraft:diamond_shovel",
+                hoe: "minecraft:diamond_hoe",
+                fishing_rod: "minecraft:fishing_rod",
+                shears: "minecraft:shears",
+                shield: "minecraft:shield",
+                elytra: "minecraft:elytra"
+            },
+			//下届合金
+            netherite: {
+                helmet: "minecraft:netherite_helmet",
+                chestplate: "minecraft:netherite_chestplate",
+                leggings: "minecraft:netherite_leggings",
+                boots: "minecraft:netherite_boots",
+                sword: "minecraft:netherite_sword",
+                axe: "minecraft:netherite_axe",
+                mace: "minecraft:netherite_mace",
+                spear: "minecraft:netherite_spear",
+                pickaxe: "minecraft:netherite_pickaxe",
+                shovel: "minecraft:netherite_shovel",
+                hoe: "minecraft:netherite_hoe",
+                bow: "minecraft:bow",
+                crossbow: "minecraft:crossbow",
+                trident: "minecraft:trident",
+                fishing_rod: "minecraft:fishing_rod",
+                shears: "minecraft:shears",
+                shield: "minecraft:shield",
+                elytra: "minecraft:elytra"
+            }
+        };
+
+        const ruleMode = document.getElementById('ruleMode');
+        const materialSelect = document.getElementById('materialSelect');
+        const equipType = document.getElementById('equipType');
+        const enchantList = document.getElementById('enchantList');
+        const conflictSummary = document.getElementById('conflictSummary');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultBox = document.getElementById('resultBox');
+        const copyBtn = document.getElementById('copyBtn');
+
+        let group1Nodes = [];
+        let group2Nodes = [];
+
+        function renderEnchantList() {
+            const equipKey = equipType.value;
+            const ignoreRule = ruleMode.value === 'ignore';
+            enchantList.innerHTML = '';
+            group1Nodes = [];
+            group2Nodes = [];
+
+            let normalEnchants = [];
+            let otherEnchants = [];
+            if (equipKey) {
+                ENCHANT_DATA.forEach(en => {
+                    if (en.equip.includes(equipKey) || en.equip.includes("all")) {
+                        normalEnchants.push(en);
+                    } else {
+                        otherEnchants.push(en);
+                    }
+                });
+            } else {
+                normalEnchants = [...ENCHANT_DATA];
+            }
+
+            if (!ignoreRule) {
+                normalEnchants.forEach(en => createEnchantItem(en, false, true));
+            } else {
+                if (normalEnchants.length > 0) {
+                    const title1 = document.createElement('div');
+                    title1.className = 'enchant-group-title';
+                    title1.innerHTML = `
+                        <span>✅ 该装备原版可附魔</span>
+                        <div class="group-ctrl">
+                            <button data-group="1" data-action="select">全选</button>
+                            <button data-group="1" data-action="cancel">取消全选</button>
+                        </div>
+                    `;
+                    enchantList.appendChild(title1);
+                    normalEnchants.forEach(en => createEnchantItem(en, true, true));
+                }
+                if (otherEnchants.length > 0) {
+                    const title2 = document.createElement('div');
+                    title2.className = 'enchant-group-title';
+                    title2.innerHTML = `
+                        <span>⚠️ 非常规附魔（原版无法使用）</span>
+                        <div class="group-ctrl">
+                            <button data-group="2" data-action="select">全选</button>
+                            <button data-group="2" data-action="cancel">取消全选</button>
+                        </div>
+                    `;
+                    enchantList.appendChild(title2);
+                    otherEnchants.forEach(en => createEnchantItem(en, true, false));
+                }
+                bindGroupBtn();
+            }
+
+            if (!ignoreRule) {
+                refreshConflicts();
+            } else {
+                conflictSummary.hidden = true;
+                conflictSummary.textContent = '';
+            }
+        }
+
+        function getActiveEnchantNodes() {
+            const active = [];
+            document.querySelectorAll('.enchant-item').forEach(item => {
+                const ck = item.querySelector('.check-input');
+                const lv = parseInt(item.querySelector('.level-input').value || 0);
+                if (ck.checked && lv > 0) active.push(item);
+            });
+            return active;
+        }
+
+        // 原版规则下，标出所有「已勾选但彼此互斥」的附魔
+        function refreshConflicts() {
+            const items = document.querySelectorAll('.enchant-item');
+            items.forEach(item => {
+                item.classList.remove('has-conflict');
+                const note = item.querySelector('.conflict-note');
+                if (note) {
+                    note.hidden = true;
+                    note.textContent = '';
+                }
+            });
+
+            if (ruleMode.value === 'ignore') {
+                conflictSummary.hidden = true;
+                conflictSummary.textContent = '';
+                return;
+            }
+
+            const activeMap = new Map();
+            getActiveEnchantNodes().forEach(item => {
+                activeMap.set(item.dataset.eid, {
+                    el: item,
+                    name: item.dataset.name,
+                    conflict: JSON.parse(item.dataset.conflict || '[]')
+                });
+            });
+
+            const blockedBy = new Map(); // 附魔id -> 与之互斥的附魔名
+            const pairs = [];
+            const seenPairs = new Set();
+
+            activeMap.forEach((info, eid) => {
+                info.conflict.forEach(cid => {
+                    const other = activeMap.get(cid);
+                    if (!other || cid === eid) return;
+
+                    if (!blockedBy.has(eid)) blockedBy.set(eid, new Set());
+                    blockedBy.get(eid).add(other.name);
+                    if (!blockedBy.has(cid)) blockedBy.set(cid, new Set());
+                    blockedBy.get(cid).add(info.name);
+
+                    const key = [eid, cid].sort().join('|');
+                    if (!seenPairs.has(key)) {
+                        seenPairs.add(key);
+                        pairs.push(`【${info.name}】↔【${other.name}】`);
+                    }
+                });
+            });
+
+            blockedBy.forEach((names, eid) => {
+                const info = activeMap.get(eid);
+                if (!info) return;
+                info.el.classList.add('has-conflict');
+                const note = info.el.querySelector('.conflict-note');
+                if (note) {
+                    note.hidden = false;
+                    note.textContent = `⛔ 互斥：不能与 ${Array.from(names).join('、')} 同时选择`;
+                }
+            });
+
+            if (pairs.length > 0) {
+                const shown = pairs.slice(0, 5).join('，');
+                const more = pairs.length > 5 ? ` 等 ${pairs.length} 组` : '';
+                conflictSummary.hidden = false;
+                conflictSummary.innerHTML = `<span aria-hidden="true">⚠️</span><span>已勾选的附魔中有 <strong>${pairs.length}</strong> 组互斥，原版规则下无法共存：${shown}${more}。冲突项已标红，请取消勾选每组中的一个。</span>`;
+            } else {
+                conflictSummary.hidden = true;
+                conflictSummary.textContent = '';
+            }
+        }
+
+        function createEnchantItem(enchant, isIgnoreMode, checked) {
+            const div = document.createElement('div');
+            div.className = 'enchant-item';
+            div.dataset.eid = enchant.id;
+            div.dataset.max = enchant.maxLv;
+            div.dataset.name = enchant.name;
+            div.dataset.conflict = JSON.stringify(enchant.conflict);
+
+            const label = document.createElement('label');
+            label.className = 'enchant-label';
+
+            const ck = document.createElement('input');
+            ck.type = 'checkbox';
+            ck.className = 'check-input';
+            ck.checked = checked;
+
+            label.appendChild(ck);
+            label.append(enchant.name);
+
+            const input = document.createElement('input');
+            input.type = "number";
+            input.className = "level-input";
+            input.dataset.id = enchant.id;
+            input.value = enchant.maxLv;
+            input.min = 0;
+            if (!isIgnoreMode) input.max = enchant.maxLv;
+
+            input.addEventListener('input', function () {
+                const val = parseInt(this.value || 0);
+                const max = parseInt(this.parentElement.dataset.max);
+                if (isIgnoreMode && val > max) {
+                    this.classList.add('warn');
+                } else {
+                    this.classList.remove('warn');
+                }
+            });
+
+            div.appendChild(label);
+            div.appendChild(input);
+
+            if (!isIgnoreMode) {
+                const note = document.createElement('div');
+                note.className = 'conflict-note';
+                note.hidden = true;
+                div.appendChild(note);
+                ck.addEventListener('change', refreshConflicts);
+                input.addEventListener('input', refreshConflicts);
+            }
+
+            enchantList.appendChild(div);
+
+            if (isIgnoreMode) {
+                const equipKey = equipType.value;
+                if (enchant.equip.includes(equipKey) || enchant.equip.includes("all")) {
+                    group1Nodes.push(ck);
+                } else {
+                    group2Nodes.push(ck);
+                }
+            }
+        }
+
+        function bindGroupBtn() {
+            document.querySelectorAll('.group-ctrl button').forEach(btn => {
+                btn.onclick = function () {
+                    const g = this.dataset.group;
+                    const act = this.dataset.action;
+                    const list = g === "1" ? group1Nodes : group2Nodes;
+                    const status = act === "select";
+                    list.forEach(cb => cb.checked = status);
+                };
+            });
+        }
+
+        ruleMode.addEventListener('change', renderEnchantList);
+        equipType.addEventListener('change', renderEnchantList);
+        materialSelect.addEventListener('change', renderEnchantList);
+
+        generateBtn.addEventListener('click', () => {
+            const mat = materialSelect.value;
+            const type = equipType.value;
+            if (!type) {
+                resultBox.innerText = "❌ 请先选择装备类型！";
+                return;
+            }
+            const itemId = ITEM_ID_MAP[mat][type];
+            const ignoreRule = ruleMode.value === 'ignore';
+            const enchantObj = {};
+            const selected = [];
+            let hasError = false;
+
+            const allItems = document.querySelectorAll('.enchant-item');
+            for (const item of allItems) {
+                const eid = item.dataset.eid;
+                const conflictList = JSON.parse(item.dataset.conflict);
+                const name = item.querySelector('.enchant-label').innerText;
+                const ck = item.querySelector('.check-input');
+                const levelDom = item.querySelector('.level-input');
+                let lv = parseInt(levelDom.value || 0);
+
+                if (!ck.checked || lv <= 0) continue;
+
+                // 原版模式：双向互斥校验
+                if (!ignoreRule) {
+                    for (const s of selected) {
+                        if (conflictList.includes(s.eid) || s.conflictList.includes(eid)) {
+                            resultBox.innerText = `❌ 冲突：【${name}】与【${s.name}】无法共存！`;
+                            hasError = true;
+                            return;
+                        }
+                    }
+                }
+
+                selected.push({ eid, name, conflictList });
+                enchantObj[eid] = lv;
+            }
+
+            if (hasError) return;
+            if (Object.keys(enchantObj).length === 0) {
+                resultBox.innerText = "⚠️ 未勾选任何附魔！";
+                return;
+            }
+
+            const enchantJson = JSON.stringify(enchantObj);
+            const cmd = `/give @p ${itemId}[minecraft:enchantments=${enchantJson}] 1`;
+            resultBox.innerText = cmd;
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            const text = resultBox.innerText;
+            const originText = copyBtn.innerText;
+
+            if (text.startsWith('/give')) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    copyBtn.innerText = "已复制！";
+                } catch {
+                    copyBtn.innerText = "复制失败";
+                }
+            } else {
+                copyBtn.innerText = "请先生成指令";
+            }
+
+            setTimeout(() => {
+                copyBtn.innerText = originText;
+            }, 1500);
+        });
+
+        renderEnchantList();
+    </script>
+</body>
+</html>
