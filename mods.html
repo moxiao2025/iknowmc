@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fabric 模组推荐</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: #f0f2f5;
+        --glow: rgba(78, 201, 176, 0.18);
+        --card: #ffffff;
+        --line: #e6e9ee;
+        --text: #1f2933;
+        --text-body: #45515f;
+        --text-dim: #6b7785;
+        --accent: #2f9e7f;
+        --accent-soft: rgba(47, 158, 127, 0.10);
+        --shadow: 0 2px 10px rgba(23, 42, 58, 0.06);
+        --shadow-lg: 0 12px 28px rgba(23, 42, 58, 0.10);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #171a1f;
+            --glow: rgba(78, 201, 176, 0.10);
+            --card: #22262d;
+            --line: #313741;
+            --text: #e8ebef;
+            --text-body: #c2cbd6;
+            --text-dim: #98a2ae;
+            --accent: #4ec9b0;
+            --accent-soft: rgba(78, 201, 176, 0.14);
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+            --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.36);
+        }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+        min-height: 100vh;
+        padding: 20px 14px 40px;
+        background:
+            radial-gradient(900px 420px at 50% -180px, var(--glow), transparent 70%),
+            var(--bg);
+        color: var(--text);
+        font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+        line-height: 1.5;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .wrap { width: 100%; max-width: 1120px; margin: 0 auto; }
+
+    .top {
+        display: flex;
+        align-items: center;
+        margin: 2px 2px 18px;
+    }
+
+    .back {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        color: var(--text-dim);
+        font-size: 13px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .back:active { transform: scale(0.97); }
+
+    header { padding: 0 2px 20px; }
+
+    h1 {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
+    .sub {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--text-dim);
+    }
+
+    .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .stat {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        padding: 5px 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--card);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    .stat b {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--text-dim);
+        font-size: 12.5px;
+        text-decoration: none;
+        transition: color .18s, border-color .18s, background .18s;
+    }
+
+    .chip:hover {
+        color: var(--accent);
+        border-color: rgba(47, 158, 127, 0.4);
+        background: var(--accent-soft);
+    }
+
+    .chip span { color: var(--text); font-weight: 600; }
+
+    .group + .group {
+        margin-top: 30px;
+        padding-top: 26px;
+        border-top: 1px solid var(--line);
+    }
+
+    .group-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 4px;
+        padding-left: 2px;
+        scroll-margin-top: 16px;
+    }
+
+    .group-head::before {
+        content: "";
+        flex: none;
+        width: 3px;
+        height: 15px;
+        border-radius: 2px;
+        background: var(--accent);
+    }
+
+    h2 {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+    }
+
+    .count {
+        font-size: 12px;
+        color: var(--text-dim);
+        background: var(--accent-soft);
+        border-radius: 999px;
+        padding: 1px 8px;
+    }
+
+    .group-desc {
+        margin: 0 0 14px 2px;
+        font-size: 12.5px;
+        color: var(--text-dim);
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .mod {
+        min-width: 0;
+        padding: 16px 16px 15px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .mod:hover {
+        transform: translateY(-2px);
+        border-color: rgba(47, 158, 127, 0.35);
+        box-shadow: var(--shadow-lg);
+    }
+
+    h3 {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .en {
+        margin-top: 2px;
+        font-size: 11.5px;
+        letter-spacing: 0.2px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    .desc {
+        margin-top: 9px;
+        font-size: 13px;
+        line-height: 1.72;
+        color: var(--text-body);
+        overflow-wrap: anywhere;
+    }
+
+    .note {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 11.5px;
+        line-height: 1.6;
+    }
+
+    .block-label {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 2px 16px;
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    .block-label::before {
+        content: "";
+        flex: none;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+    }
+
+    .block-label .bt {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: var(--text);
+    }
+
+    .block-hint {
+        padding: 1px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--card);
+        font-size: 11.5px;
+    }
+
+    .packs-block {
+        scroll-margin-top: 16px;
+        margin-top: 34px;
+        padding-top: 28px;
+        border-top: 1px solid var(--line);
+    }
+
+    .extra-block {
+        scroll-margin-top: 16px;
+        margin-top: 4px;
+        padding: 20px 16px 18px;
+        border: 1px dashed rgba(47, 158, 127, 0.5);
+        border-radius: 18px;
+        background: var(--accent-soft);
+    }
+
+    .extra-block .group-head { padding-left: 0; }
+
+    .extra-block .group-desc { margin-left: 0; }
+
+    .mod-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .mod-head h3 { min-width: 0; }
+
+    .tag {
+        flex: none;
+        margin-top: 1px;
+        padding: 1px 7px;
+        border: 1px dashed rgba(47, 158, 127, 0.5);
+        border-radius: 999px;
+        color: var(--accent);
+        font-size: 10.5px;
+        line-height: 1.7;
+        white-space: nowrap;
+    }
+
+    .packs-block {
+        scroll-margin-top: 16px;
+        margin-top: 4px;
+    }
+
+    .todo-note {
+        margin: 22px 2px 0;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: var(--text-dim);
+    }
+
+    .excluded {
+        margin-top: 32px;
+        padding: 16px 18px;
+        background: var(--card);
+        border: 1px dashed var(--line);
+        border-radius: 14px;
+    }
+
+    .excluded h4 {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 7px;
+    }
+
+    .excluded p {
+        font-size: 12.5px;
+        line-height: 1.8;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    footer {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 12.5px;
+        color: var(--text-dim);
+    }
+
+    @media (min-width: 560px) {
+        body { padding: 30px 20px 48px; }
+        h1 { font-size: 25px; }
+        .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        h2 { font-size: 17px; }
+    }
+
+    @media (min-width: 1000px) {
+        .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        body { padding-top: 44px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .mod, .chip, .back { transition: none; }
+        .mod:hover { transform: none; }
+    }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="top">
+        <a class="back" href="index.html">← 工具箱</a>
+    </div>
+
+    <header>
+        <h1>Fabric 模组推荐</h1>
+        <p class="sub">
+            整理自 26.3-Fabric 实例 mods 目录里实际安装的 45 个 jar，去掉前置库与汉化补丁后，
+            保留 34 个有独立功能的模组。另附 8 个本地没装、可以留意的模组和 4 个资源包，
+            装不装自己判断。
+        </p>
+        <div class="stats">
+            <div class="stat"><b>45</b> 个 jar</div>
+            <div class="stat"><b>34</b> 个已装收录</div>
+            <div class="stat"><b>8</b> 个其它推荐</div>
+            <div class="stat"><b>4</b> 个资源包</div>
+        </div>
+    </header>
+
+    <nav class="chips" aria-label="分类导航">
+        <a class="chip" href="#qol">实用工具 <span>12</span></a>
+        <a class="chip" href="#build">建造与辅助 <span>5</span></a>
+        <a class="chip" href="#perf">性能优化 <span>14</span></a>
+        <a class="chip" href="#network">联网与进阶 <span>3</span></a>
+        <a class="chip" href="#extra">其它推荐 <span>8</span></a>
+        <a class="chip" href="#packs">资源包 <span>4</span></a>
+    </nav>
+
+    <main>
+        <div class="block-label">
+            <span class="bt">已安装</span>
+            <span class="block-hint">26.3-Fabric 实例 · 34 个</span>
+        </div>
+
+        <section class="group">
+            <div class="group-head" id="qol">
+                <h2>实用工具</h2>
+                <span class="count">12</span>
+            </div>
+            <p class="group-desc">日常游玩中随手就会用到的便捷功能，装上就能少点操作。</p>
+            <div class="grid">
+                <article class="mod">
+                    <h3>一键背包整理</h3>
+                    <p class="en">Inventory Profiles Next</p>
+                    <p class="desc">一键整理背包和箱子，支持自动补充、批量移动同类物品，还能保存多套整理方案随时切换。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>小地图</h3>
+                    <p class="en">Xaero's Minimap</p>
+                    <p class="desc">在屏幕角落显示地形小地图，支持路径点和坐标记录，画风接近原版，不会太抢眼。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>玉</h3>
+                    <p class="en">Jade</p>
+                    <p class="desc">准星对准方块或生物时，直接在画面上显示名称、状态和部分数据，不用再频繁开 F3。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>苹果皮</h3>
+                    <p class="en">AppleSkin</p>
+                    <p class="desc">在饥饿条旁显示饱和度、食物恢复量和当前饥饿值预览，吃东西前就能判断划不划算。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>输入法冲突修复</h3>
+                    <p class="en">IMBlocker</p>
+                    <p class="desc">不打字的时候自动关闭输入法，避免用 WASD 移动时弹出中文候选框，聊天时又会自动恢复。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>快捷指令键</h3>
+                    <p class="en">CommandKeys</p>
+                    <p class="desc">把常用聊天内容和指令绑定到快捷键，按下即发送，适合经常使用固定指令的服务器。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>滚轮增强</h3>
+                    <p class="en">Mouse Wheelie</p>
+                    <p class="desc">在背包、箱子等界面用滚轮快速搬运物品，还能滚动切换物品栏，减少拖拽操作。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>聊天记录</h3>
+                    <p class="en">Chat Logger</p>
+                    <p class="desc">把聊天栏收到的消息实时写入本地 txt 文件，错过的重要信息可以事后翻查。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>逻辑缩放</h3>
+                    <p class="en">Logical Zoom</p>
+                    <p class="desc">按住按键平滑放大视野，松手自动恢复，看远处建筑或观察细节时很实用。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>配方全解锁</h3>
+                    <p class="en">Get Recipes</p>
+                    <p class="desc">打开配方书即可查看全部配方；服务器没装这个模组时，也能预览本地配方，只是合成时仅显示虚影。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>模组菜单</h3>
+                    <p class="en">Mod Menu</p>
+                    <p class="desc">在标题界面提供模组列表，能查看已安装的模组并进入各自的设置页，装完模组找配置就靠它。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>世界下载</h3>
+                    <p class="en">WorldTools</p>
+                    <p class="desc">把服务器地图完整下载成单人存档，方便离线查看建筑、做规划或留档。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="group">
+            <div class="group-head" id="build">
+                <h2>建造与辅助</h2>
+                <span class="count">5</span>
+            </div>
+            <p class="group-desc">照图施工、查看数据、处理特殊方块时用的工具，偏工程向。</p>
+            <div class="grid">
+                <article class="mod">
+                    <h3>投影</h3>
+                    <p class="en">Litematica</p>
+                    <p class="desc">加载 .litematic 等投影文件，在游戏里显示半透明建筑轮廓，方便照图施工和核对进度。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>投影打印机</h3>
+                    <p class="en">Litematica Printer</p>
+                    <p class="desc">给投影补上自动放置功能，按投影逐块摆放方块，大面积复刻建筑时省下大量重复操作。</p>
+                    <span class="note">需搭配投影与 MaLiLib；服务器使用前先确认规则</span>
+                </article>
+
+                <article class="mod">
+                    <h3>迷你 HUD</h3>
+                    <p class="en">MiniHUD</p>
+                    <p class="desc">在屏幕上显示坐标、生物群系、光照、刷怪范围等信息，显示哪些行可以自己挑。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>Tweakeroo</h3>
+                    <p class="desc">一大堆可以单独开关的客户端微调，覆盖手部、放置、视角和界面细节，按需开启就好。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>基岩挖掘机</h3>
+                    <p class="en">Bedrock Miner</p>
+                    <p class="desc">自动放置活塞、黏液块和红石火把来破坏基岩，省去手动对准和反复操作。</p>
+                    <span class="note">需自备材料与效率 V 镐子；联机前先征得同意</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="group">
+            <div class="group-head" id="perf">
+                <h2>性能优化</h2>
+                <span class="count">14</span>
+            </div>
+            <p class="group-desc">分别针对渲染、区块、内存和加载速度，互相不冲突，可以一起装。</p>
+            <div class="grid">
+                <article class="mod">
+                    <h3>钠</h3>
+                    <p class="en">Sodium</p>
+                    <p class="desc">重写渲染管线，大幅提高帧率、减少卡顿，同时修掉不少原版画面异常，装了基本可以替代 OptiFine。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>钠 · 扩展</h3>
+                    <p class="en">Sodium Extra</p>
+                    <p class="desc">给钠补上原版被精简掉的画质选项，比如粒子、雾效、云层和光影细节的开关。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>Reese 的钠设置</h3>
+                    <p class="en">Reese's Sodium Options</p>
+                    <p class="desc">把钠的视频设置界面换成更好用的版本，分类更清楚，找选项不用来回翻页。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>锂</h3>
+                    <p class="en">Lithium</p>
+                    <p class="desc">优化游戏的 tick 逻辑，包括实体 AI、物理和方块更新，不改变玩法，主要减少运算开销。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>C2M 引擎</h3>
+                    <p class="en">Concurrent Chunk Management Engine</p>
+                    <p class="desc">多线程处理区块生成与加载，边跑图边生成地形时帧数更稳、卡顿更少。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>铁氧体磁芯</h3>
+                    <p class="en">FerriteCore</p>
+                    <p class="desc">压缩游戏内重复数据的内存占用，降低整体内存使用，模组多、内存吃紧时效果明显。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>ModernFix</h3>
+                    <p class="desc">缩短启动时间并降低内存占用，也能缓解部分模组组合导致的加载问题。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>ImmediatelyFast</h3>
+                    <p class="desc">优化 HUD、粒子、文字等即时渲染，界面元素多的时候帧数更稳。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>实体渲染优化</h3>
+                    <p class="en">EntityCulling</p>
+                    <p class="desc">用异步路径追踪判断哪些实体和方块实体看不见，直接跳过渲染，人多或箱子里物品多时提升明显。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>BadOptimizations</h3>
+                    <p class="desc">从渲染之外的地方抠性能，比如光照计算、贴图更新和天空渲染等细节。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>动态 FPS</h3>
+                    <p class="en">Dynamic FPS</p>
+                    <p class="desc">窗口在后台或长时间没操作时自动降低帧率，减少显卡占用和耗电，切回来立刻恢复。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>More Culling</h3>
+                    <p class="desc">剔除被遮挡的方块面和实体，减少实际绘制的几何体数量，视野复杂时更省性能。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>Ixeris</h3>
+                    <p class="desc">缓存并异步处理原始输入事件，高帧率下鼠标视角更跟手，减轻输入带来的抖动。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>Quick Pack</h3>
+                    <p class="desc">加快资源包和数据包 zip 的读取速度，进游戏和切换包时等待更短。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="group">
+            <div class="group-head" id="network">
+                <h2>联网与进阶</h2>
+                <span class="count">3</span>
+            </div>
+            <p class="group-desc">跨版本联机、远距离地形和进阶客户端，按需要选用，注意服务器规则。</p>
+            <div class="grid">
+                <article class="mod">
+                    <h3>ViaFabricPlus</h3>
+                    <p class="desc">让 26.3 客户端连接各个历史版本的服务器，从经典版到最新版都能进，跨版本和朋友联机方便很多。</p>
+                    <span class="note">已附带 Bedrock 协议支持插件</span>
+                </article>
+
+                <article class="mod">
+                    <h3>Lodistance</h3>
+                    <p class="desc">把已探索地形以低细节形式共享给所有玩家：服务端和客户端装同一个 jar，大家都能看到整片探索过的世界，单人也能用。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>Meteor Client</h3>
+                    <p class="desc">功能齐全的客户端工具端，附带中文汉化，适合单人测试或允许使用的服务器。</p>
+                    <span class="note">作弊类客户端，多数服务器会封禁</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="extra-block" id="extra">
+            <div class="group-head">
+                <h2>其它推荐</h2>
+                <span class="count">8</span>
+            </div>
+            <p class="group-desc">本地 mods 目录里没有这些，按现有说明整理；装不装、装哪个版本自己判断。</p>
+            <div class="grid">
+                <article class="mod">
+                    <div class="mod-head">
+                        <h3>氪</h3>
+                        <span class="tag">网络优化</span>
+                    </div>
+                    <p class="en">Krypton</p>
+                    <p class="desc">网络优化类模组，一般不是很需要；在高版本上可能基本无效。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>REI 物品管理器</h3>
+                    <p class="en">RoughlyEnoughItems</p>
+                    <p class="desc">物品与配方查询。注意 JEI 需要服务器支持；也可以考虑其他同类方案，例如 RRV。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>自动钓鱼 XPlus 版</h3>
+                    <p class="en">xplus-autofish</p>
+                    <p class="desc">自动钓鱼。</p>
+                </article>
+
+                <article class="mod">
+                    <div class="mod-head">
+                        <h3>远距离渲染</h3>
+                        <span class="tag">备选方案</span>
+                    </div>
+                    <p class="desc">除了已装的 Lodistance，还可以用 Voxy 或 Distant Horizons；Eminus 也挺推荐，按需要挑一个。</p>
+                </article>
+
+                <article class="mod">
+                    <div class="mod-head">
+                        <h3>刷村民附魔交易</h3>
+                        <span class="tag">停更于 26.1.2</span>
+                    </div>
+                    <p class="en">librarian-trade-finder</p>
+                    <p class="desc">用于查找村民的附魔交易。已经停更，26.1.2 之后能不能用要自己确认。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>耐久指示器更新版</h3>
+                    <p class="en">DurabilityViewer</p>
+                    <p class="desc">显示装备的剩余耐久，同时显示包裹的剩余容量。</p>
+                </article>
+
+                <article class="mod">
+                    <div class="mod-head">
+                        <h3>花卉地图</h3>
+                        <span class="tag">受 Y 值影响</span>
+                    </div>
+                    <p class="en">Flower Map</p>
+                    <p class="desc">查看当前位置能生成什么花朵，注意 Y 值（高度）会影响结果。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>Iris Shaders</h3>
+                    <p class="desc">为游戏提供光影支持，配合光影包使用。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="group packs-block" id="packs">
+            <div class="group-head">
+                <h2>资源包</h2>
+                <span class="count">4</span>
+            </div>
+            <p class="group-desc">本地同样没有安装，按用途挑就行。</p>
+            <div class="grid">
+                <article class="mod">
+                    <div class="mod-head">
+                        <h3>高清修复：Faithful 32x</h3>
+                        <span class="tag">可选</span>
+                    </div>
+                    <p class="desc">32x 高清材质。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>红石材质：Redstone Tweaks</h3>
+                    <p class="desc">红石能量显示、红石元件方向指示等，看红石线路更直观。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>黑山大叔护眼大补丸</h3>
+                    <p class="desc">护眼向资源包。</p>
+                </article>
+
+                <article class="mod">
+                    <h3>雨雪淡化</h3>
+                    <p class="desc">解决满屏雨滴和雪花挡视野的问题；也可以改用 mod「粒子雨」，或者在钠（Sodium）里关闭雨雪。</p>
+                </article>
+            </div>
+        </section>
+
+        <p class="todo-note">这份清单还没补完，后面遇到合适的再继续加。</p>
+
+        <aside class="excluded">
+            <h4>未单独收录</h4>
+            <p>
+                Fabric API、Architectury、Cloth Config、YetAnotherConfigLib、Forge Config API Port、libIPN、
+                MaLiLib、Placeholder API、Fabric Language Kotlin —— 这些是给其它模组当前置的库，本身没有玩法。
+                另有 Litematica Printer 与 Meteor Client 的版本包 / 汉化补丁，内容已并入对应条目。
+            </p>
+        </aside>
+    </main>
+
+    <footer>34 个已装模组 · 8 个其它推荐 · 4 个资源包</footer>
+</div>
+</body>
+
+</html>
