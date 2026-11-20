@@ -5,43 +5,278 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MC村民交易所附魔检测</title>
     <style>
-        *{box-sizing: border-box;margin:0;padding:0;font-family:system-ui}
-        body{background:#1e1e1e;color:#eee;padding:16px;max-width:1200px;margin:0 auto}
-        h1{text-align:center;margin-bottom:20px;color:#4ec9b0;font-size:22px}
-        .container{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        @media(max-width:700px){.container{grid-template-columns:1fr}}
-        .panel{background:#2d2d2d;padding:16px;border-radius:8px;margin-bottom:12px}
-        textarea{width:100%;min-height:120px;background:#383838;color:#fff;border:1px solid #555;padding:10px;border-radius:6px;font-size:15px;resize:vertical}
-        .title{font-size:17px;margin-bottom:10px;color:#82c9ff;font-weight:bold}
-        .item{padding:4px 6px;margin:3px 0;border-radius:4px;font-size:14px}
-        .have{background:#275430}
-        .miss{background:#602828}
-        .tip{color:#aaa;font-size:13px;margin:8px 0}
-        button{padding:6px 12px;background:#3b6ea8;color:#fff;border:none;border-radius:4px;margin-top:8px;cursor:pointer}
-        button:hover{background:#4b84c7}
+        :root {
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --line: #e8e8e8;
+            --line-soft: #eeeeee;
+            --text: #222222;
+            --text-strong: #333333;
+            --text-dim: #666666;
+            --field: #ffffff;
+            --field-border: #cccccc;
+            --surface: #fafafa;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --ok-bg: #ecfdf5;
+            --ok-line: #a7f3d0;
+            --ok-text: #047857;
+            --bad-bg: #fff1f2;
+            --bad-line: #fecdd3;
+            --bad-text: #be123c;
+            --shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #171a1f;
+                --card: #22262d;
+                --line: #313741;
+                --line-soft: #313741;
+                --text: #e8ebef;
+                --text-strong: #e8ebef;
+                --text-dim: #98a2ae;
+                --field: #1b1f25;
+                --field-border: #3b424d;
+                --surface: #272c34;
+                --accent: #3b82f6;
+                --accent-hover: #2563eb;
+                --ok-bg: rgba(16,185,129,0.14);
+                --ok-line: rgba(16,185,129,0.38);
+                --ok-text: #6ee7b7;
+                --bad-bg: rgba(244,63,94,0.14);
+                --bad-line: rgba(244,63,94,0.38);
+                --bad-text: #fda4af;
+                --shadow: 0 2px 12px rgba(0,0,0,0.4);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px 14px 40px;
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 返回按钮：与 ratio.html / countdown.html 保持一致 */
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 1200px;
+            margin: 0 auto 14px;
+        }
+
+        .back {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            color: var(--text-dim);
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .back:active { transform: scale(0.97); }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text);
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .block {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+        }
+
+        .block:last-child { margin-bottom: 0; }
+
+        .block-title {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-strong);
+            border-bottom: 1px solid var(--line-soft);
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+
+        .block-title .hint {
+            font-size: 13px;
+            font-weight: normal;
+            color: var(--text-dim);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 10px;
+            background: var(--field);
+            color: var(--text);
+            border: 1px solid var(--field-border);
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        textarea::placeholder { color: var(--text-dim); opacity: 0.75; }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .tip {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin: 8px 0;
+        }
+
+        .switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+            margin-top: 6px;
+            padding: 0 4px;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .switch input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .results .block { margin-bottom: 0; }
+
+        .list { min-width: 0; }
+
+        .item {
+            padding: 6px 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .item.have {
+            background: var(--ok-bg);
+            border: 1px solid var(--ok-line);
+            color: var(--ok-text);
+        }
+
+        .item.miss {
+            background: var(--bad-bg);
+            border: 1px solid var(--bad-line);
+            color: var(--bad-text);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            min-height: 44px;
+            margin-top: 14px;
+            padding: 10px 16px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+
+        .btn-copy { background: #10b981; }
+
+        .btn-copy:hover { background: #059669; }
+
+        @media (max-width: 760px) {
+            body { padding: 16px 12px 32px; }
+            .page { padding: 18px 14px; }
+            h1 { font-size: 20px; margin-bottom: 16px; }
+            .results { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+            .block { padding: 16px 14px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn { transition: none; }
+        }
     </style>
 </head>
 <body>
-<h1>MC村民交易所附魔检测工具</h1>
-<div class="panel">
-    <div class="title">输入已拥有附魔（换行/空格/,/，分隔）</div>
-    <textarea id="inputBox" placeholder="示例：
-亡灵杀手,经验修补 横扫之刃，快速装填"></textarea>
-    <div class="tip">严格模式默认开启：仅完整名称 / 预设别名可匹配；宽松模式开启后允许片段匹配（会有批量误匹配风险）</div>
-    <div style="margin-top:8px;">
-        <label><input type="checkbox" id="looseMode"> 宽松模式（片段模糊匹配，慎用）</label>
-    </div>
+
+<div class="top">
+    <a class="back" href="index.html">← 工具箱</a>
 </div>
 
-<div class="container">
-    <div class="panel">
-        <div class="title">✅已匹配到的附魔</div>
-        <div id="haveList"></div>
-    </div>
-    <div class="panel">
-        <div class="title">❌还缺少的附魔（找村民刷这些）</div>
-        <div id="missList"></div>
-        <button id="copyMissBtn">一键复制缺失附魔</button>
+<div class="page">
+    <h1>MC村民交易所附魔检测工具</h1>
+
+    <section class="block">
+        <h2 class="block-title">输入已拥有附魔<span class="hint">（换行 / 空格 / , / ，分隔）</span></h2>
+        <textarea id="inputBox" placeholder="示例：
+亡灵杀手,经验修补 横扫之刃，快速装填"></textarea>
+        <p class="tip">严格模式默认开启：仅完整名称 / 预设别名可匹配；宽松模式开启后允许片段匹配（会有批量误匹配风险）</p>
+        <label class="switch"><input type="checkbox" id="looseMode"> 宽松模式（片段模糊匹配，慎用）</label>
+    </section>
+
+    <div class="results">
+        <section class="block">
+            <h2 class="block-title">✅ 已匹配到的附魔</h2>
+            <div id="haveList" class="list"></div>
+        </section>
+        <section class="block">
+            <h2 class="block-title">❌ 还缺少的附魔（找村民刷这些）</h2>
+            <div id="missList" class="list"></div>
+            <button id="copyMissBtn" class="btn btn-copy">一键复制缺失附魔</button>
+        </section>
     </div>
 </div>
 
