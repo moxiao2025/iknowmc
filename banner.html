@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旗帜生成</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f0f2f5;
+            --glow: rgba(78, 201, 176, 0.18);
+            --card: #ffffff;
+            --line: #e6e9ee;
+            --text: #1f2933;
+            --text-dim: #6b7785;
+            --accent: #2f9e7f;
+            --accent-soft: rgba(47, 158, 127, 0.10);
+            --field: #f7f9fb;
+            --shadow: 0 2px 10px rgba(23, 42, 58, 0.06);
+            --shadow-lg: 0 12px 28px rgba(23, 42, 58, 0.08);
+            --check-a: #e9edf1;
+            --check-b: #ffffff;
+            --danger: #c0392b;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #171a1f;
+                --glow: rgba(78, 201, 176, 0.10);
+                --card: #22262d;
+                --line: #313741;
+                --text: #e8ebef;
+                --text-dim: #98a2ae;
+                --accent: #4ec9b0;
+                --accent-soft: rgba(78, 201, 176, 0.14);
+                --field: #1b1f25;
+                --shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+                --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.36);
+                --check-a: #262b33;
+                --check-b: #1e2228;
+                --danger: #f08a7c;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            padding: 20px 14px 40px;
+            background:
+                radial-gradient(900px 420px at 50% -180px, var(--glow), transparent 70%),
+                var(--bg);
+            color: var(--text);
+            font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app { width: 100%; max-width: 1060px; margin: 0 auto; }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 2px 16px;
+        }
+
+        .back {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            color: var(--text-dim);
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .back:active { transform: scale(0.97); }
+
+        .title-wrap { min-width: 0; }
+
+        h1 {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sub {
+            font-size: 12.5px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            padding: 16px;
+            min-width: 0;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card-head h2 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .count {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        /* ---------- 预览区 ---------- */
+
+        .stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 0 2px;
+        }
+
+        #mainCanvas {
+            display: block;
+            height: 300px;
+            width: auto;
+            max-width: 100%;
+            image-rendering: pixelated;
+            filter: drop-shadow(0 12px 20px rgba(20, 32, 48, 0.20));
+        }
+
+        .stage-note {
+            margin-top: 8px;
+            min-height: 18px;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-dim);
+            word-break: break-word;
+        }
+
+        .inspect {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--line);
+        }
+
+        .inspect-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12.5px;
+            color: var(--text-dim);
+        }
+
+        .inspect-head b { color: var(--text); font-weight: 600; }
+
+        .inspect-body {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+            margin-top: 10px;
+        }
+
+        .inspect-stage {
+            flex: none;
+            width: 96px;
+            height: 152px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background-color: var(--check-b);
+            background-image:
+                linear-gradient(45deg, var(--check-a) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--check-a) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--check-a) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--check-a) 75%);
+            background-size: 12px 12px;
+            background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+        }
+
+        #inspectCanvas {
+            display: block;
+            height: 136px;
+            width: auto;
+            image-rendering: pixelated;
+        }
+
+        .inspect-meta {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .inspect-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .inspect-sub {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11.5px;
+            color: var(--text-dim);
+            word-break: break-all;
+        }
+
+        .inspect-tip {
+            margin-top: 4px;
+            font-size: 11.5px;
+            line-height: 1.55;
+            color: var(--text-dim);
+        }
+
+        /* ---------- 分段按钮 ---------- */
+
+        .seg {
+            display: inline-flex;
+            flex: none;
+            gap: 2px;
+            padding: 2px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: var(--field);
+        }
+
+        .seg-btn {
+            border: 0;
+            border-radius: 7px;
+            padding: 5px 11px;
+            background: transparent;
+            color: var(--text-dim);
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .seg-btn.is-on {
+            background: var(--card);
+            color: var(--accent);
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        .seg.mini .seg-btn { padding: 4px 8px; font-size: 11.5px; }
+
+        /* ---------- 编辑区 ---------- */
+
+        .field { margin-bottom: 14px; }
+
+        .label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .field-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 7px;
+        }
+
+        .field-head .label { margin-bottom: 0; }
+
+        .field-val {
+            min-width: 0;
+            font-size: 12px;
+            color: var(--text-dim);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .field-val b { color: var(--text); font-weight: 600; }
+
+        /* 色块网格：窄屏 8 列，>=620px 16 列 */
+        .swatches {
+            display: grid;
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .swatch {
+            position: relative;
+            width: 100%;
+            min-height: 30px;
+            aspect-ratio: 1 / 1;
+            padding: 0;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            border-radius: 8px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .swatch:active { transform: scale(0.94); }
+
+        .swatch.is-on,
+        .swatch.is-on:active {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.22),
+                0 0 0 2px var(--card),
+                0 0 0 4px var(--accent),
+                0 0 12px 1px var(--accent-soft);
+        }
+
+        .swatch:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        /* 名称浮层（鼠标悬停 / 触屏长按） */
+        .tip {
+            position: fixed;
+            z-index: 60;
+            padding: 4px 8px;
+            border-radius: 7px;
+            background: rgba(18, 22, 28, 0.92);
+            color: #ffffff;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -100%);
+            transition: opacity 0.12s ease;
+        }
+
+        .tip.is-on { opacity: 1; }
+
+        .range-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+
+        .range-head .label { margin-bottom: 5px; }
+
+        .range-val {
+            font-size: 12px;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            display: block;
+            width: 100%;
+            height: 24px;
+            margin: 0;
+            accent-color: var(--accent);
+            cursor: pointer;
+            background: transparent;
+        }
+
+        input[type="range"]:disabled { cursor: not-allowed; opacity: 0.5; }
+
+        .link-btn {
+            border: 0;
+            background: transparent;
+            color: var(--accent);
+            font: inherit;
+            font-size: 12px;
+            padding: 0 2px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .link-btn:disabled { color: var(--text-dim); opacity: 0.5; cursor: not-allowed; }
+
+        /* ---------- 图层列表 ---------- */
+
+        .layers {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 10px 0 12px;
+        }
+
+        .layer {
+            display: grid;
+            grid-template-columns: 26px minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--field);
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        .layer:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+        .layer.is-sel {
+            border-color: var(--accent);
+            background: var(--card);
+            box-shadow: 0 0 0 2px var(--accent-soft);
+        }
+
+        .layer-idx {
+            width: 26px;
+            height: 26px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text-dim);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .layer.is-sel .layer-idx {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .layer-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .thumb {
+            display: block;
+            flex: none;
+            height: 34px;
+            width: auto;
+            border-radius: 2px;
+            image-rendering: pixelated;
+            filter: drop-shadow(0 1px 1px rgba(20, 32, 48, 0.22));
+        }
+
+        .layer-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+        }
+
+        .layer-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .layer-sub {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11.5px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .color-dot {
+            flex: none;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+        }
+
+        .layer-ops { display: flex; gap: 2px; }
+
+        .icon-btn {
+            width: 26px;
+            height: 26px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text-dim);
+            font: inherit;
+            font-size: 13px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .icon-btn.del:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+
+        /* ---------- 当前层编辑器 ---------- */
+
+        .picker {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--line);
+        }
+
+        .picker[hidden] { display: none; }
+
+        .picker-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .picker-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .picker-title b {
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .picker-hint {
+            min-width: 0;
+            font-size: 12px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .picker-block + .picker-block { margin-top: 12px; }
+
+        .picker-label {
+            margin-bottom: 7px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .pattern-scroll {
+            max-height: 322px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-right: 3px;
+        }
+
+        .tile-group + .tile-group { margin-top: 10px; }
+
+        .tile-group-label {
+            margin-bottom: 6px;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            color: var(--text-dim);
+        }
+
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+            gap: 7px;
+        }
+
+        .tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+            padding: 7px 3px 5px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--field);
+            color: var(--text);
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .tile:active { transform: scale(0.97); }
+
+        .tile canvas {
+            display: block;
+            width: auto;
+            height: 42px;
+            image-rendering: pixelated;
+        }
+
+        .tile-name {
+            font-size: 10.5px;
+            line-height: 1.3;
+            color: var(--text-dim);
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .tile.is-on {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            box-shadow: 0 0 0 2px var(--accent-soft);
+        }
+
+        .tile.is-on .tile-name {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .tile:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* ---------- 操作按钮 ---------- */
+
+        .editor-actions { display: flex; gap: 8px; }
+
+        .btn {
+            height: 40px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font: inherit;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .btn.primary {
+            flex: 1;
+            min-width: 0;
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .btn.primary:not(:disabled):hover { filter: brightness(0.96); }
+
+        .btn.ghost {
+            flex: none;
+            background: var(--card);
+            border-color: var(--line);
+            color: var(--text-dim);
+        }
+
+        .btn.ghost:not(:disabled):hover { color: var(--text); border-color: var(--accent); }
+
+        .limit-note {
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-dim);
+            word-break: break-word;
+        }
+
+        .limit-note[hidden] { display: none; }
+
+        /* ---------- 案例 ---------- */
+
+        .presets {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--line);
+        }
+
+        .section-title {
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            max-width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--field);
+            color: var(--text);
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .chip:hover { border-color: var(--accent); }
+
+        .chip:active { transform: scale(0.98); }
+
+        .chip-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .badge {
+            flex: none;
+            padding: 1px 5px;
+            border-radius: 5px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+
+        .badge.sample {
+            background: rgba(128, 136, 146, 0.16);
+            color: var(--text-dim);
+        }
+
+        .presets-note {
+            margin-top: 8px;
+            font-size: 11.5px;
+            line-height: 1.7;
+            color: var(--text-dim);
+        }
+
+        /* ---------- 数据与校验 ---------- */
+
+        .info {
+            margin-top: 16px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .info summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .info summary::-webkit-details-marker { display: none; }
+
+        .info summary::before {
+            content: "▸";
+            flex: none;
+            color: var(--accent);
+            transition: transform 0.18s ease;
+        }
+
+        .info[open] summary::before { transform: rotate(90deg); }
+
+        .info-body {
+            padding: 0 16px 18px;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text-dim);
+        }
+
+        .info-body h3 {
+            margin: 14px 0 4px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .info-body p { margin: 4px 0; }
+
+        .info-body ul, .info-body ol { padding-left: 20px; }
+
+        .info-body li { margin: 2px 0; }
+
+        .info-body b { color: var(--text); }
+
+        .info-body code {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11.5px;
+            color: var(--text);
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 0 4px;
+            word-break: break-all;
+        }
+
+        .idlist {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1px 12px;
+            margin-top: 4px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11.5px;
+        }
+
+        .idlist span { min-width: 0; word-break: break-word; }
+
+        .foot {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* ---------- 响应式 ---------- */
+
+        @media (min-width: 860px) {
+            body { padding: 34px 20px 48px; }
+            h1 { font-size: 22px; }
+            .layout {
+                grid-template-columns: minmax(320px, 370px) minmax(0, 1fr);
+                gap: 18px;
+            }
+            .card { padding: 18px; }
+            #mainCanvas { height: 330px; }
+        }
+
+        @media (min-width: 620px) {
+            .swatches {
+                grid-template-columns: repeat(16, minmax(0, 1fr));
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .card { padding: 14px; }
+
+            .layer {
+                grid-template-columns: 24px minmax(0, 1fr) auto;
+                padding: 6px 7px;
+            }
+
+            .layer-idx { width: 24px; height: 24px; }
+
+            .thumb { height: 32px; }
+
+            .tiles {
+                grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+                gap: 6px;
+            }
+
+            .pattern-scroll { max-height: 288px; }
+
+            #mainCanvas { height: 280px; }
+
+            .inspect-stage { width: 86px; height: 140px; }
+
+            #inspectCanvas { height: 124px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="top">
+            <a class="back" href="index.html">← 工具箱</a>
+            <div class="title-wrap">
+                <h1>旗帜生成</h1>
+                <p class="sub">用原版掩码逐层叠加，预览织布机效果</p>
+            </div>
+        </div>
+
+        <main class="layout">
+            <section class="card" id="previewCard">
+                <div class="card-head">
+                    <h2>预览</h2>
+                    <div class="seg" id="shapeSeg" role="group" aria-label="外观形状">
+                        <button type="button" class="seg-btn is-on" data-shape="banner">旗帜</button>
+                        <button type="button" class="seg-btn" data-shape="shield">盾牌</button>
+                    </div>
+                </div>
+
+                <div class="stage">
+                    <canvas id="mainCanvas" width="20" height="40" aria-label="旗帜预览"></canvas>
+                </div>
+                <p class="stage-note" id="stageNote"></p>
+
+                <div class="inspect">
+                    <div class="inspect-head">
+                        <span>单层查看 · 第 <b id="inspectIdx">1</b> 层</span>
+                        <div class="seg mini" id="maskSeg" role="group" aria-label="单层显示方式">
+                            <button type="button" class="seg-btn is-on" data-mode="color">着色</button>
+                            <button type="button" class="seg-btn" data-mode="mask">遮罩</button>
+                        </div>
+                    </div>
+                    <div class="inspect-body">
+                        <div class="inspect-stage">
+                            <canvas id="inspectCanvas" width="20" height="40" aria-label="单层图案预览"></canvas>
+                        </div>
+                        <div class="inspect-meta">
+                            <div class="inspect-name" id="inspectName"></div>
+                            <div class="inspect-sub" id="inspectSub"></div>
+                            <p class="inspect-tip">棋盘格为透明区域；「遮罩」显示这层原始的 alpha 覆盖形状。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head">
+                    <h2>图层</h2>
+                    <span class="count" id="layerCount">0 / 6</span>
+                </div>
+
+                <div class="field">
+                    <div class="field-head">
+                        <span class="label">底色</span>
+                        <span class="field-val" id="baseName"></span>
+                    </div>
+                    <div class="swatches" id="baseSwatches" role="group" aria-label="底色"></div>
+                </div>
+
+                <div class="field">
+                    <div class="range-head">
+                        <label class="label" for="upto">叠加范围</label>
+                        <span class="range-val" id="uptoText">仅显示底色</span>
+                    </div>
+                    <input type="range" id="upto" min="0" max="0" value="0" step="1" aria-label="显示到第几层">
+                    <div class="range-head" style="margin-top:2px">
+                        <span class="range-val">第 1 层最先叠加，最贴近底色</span>
+                        <button type="button" class="link-btn" id="showAll">显示全部</button>
+                    </div>
+                </div>
+
+                <div class="layers" id="layers"></div>
+
+                <div class="editor-actions">
+                    <button type="button" class="btn primary" id="addLayer">＋ 添加图层</button>
+                    <button type="button" class="btn ghost" id="clearLayers">清空图案</button>
+                </div>
+                <p class="limit-note" id="limitNote" hidden></p>
+
+                <div class="picker" id="picker">
+                    <div class="picker-head">
+                        <span class="picker-title">编辑第 <b id="editIdx">1</b> 层</span>
+                        <span class="picker-hint" id="editHint"></span>
+                    </div>
+                    <div class="picker-block">
+                        <div class="picker-label">颜色</div>
+                        <div class="swatches" id="layerSwatches" role="group" aria-label="图层颜色"></div>
+                    </div>
+                    <div class="picker-block">
+                        <div class="picker-label">图案</div>
+                        <div class="pattern-scroll">
+                            <div id="patternTiles"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="presets">
+                    <div class="section-title">载入案例</div>
+                    <div class="chips" id="presets"></div>
+                    <p class="presets-note">
+                        「原版」表示该组合可在原版数据中核对；「示例」是为展示效果自行搭配，并非官方旗帜。
+                    </p>
+                </div>
+            </section>
+        </main>
+
+        <details class="card info">
+            <summary>数据与校验</summary>
+            <div class="info-body">
+                <h3>贴图来源</h3>
+                <p>客户端 jar：<code>26.3-Fabric 0.20.1.jar</code>（1.21.x 数据驱动版本）。</p>
+                <ul>
+                    <li><code>assets/minecraft/textures/entity/banner/</code>：<code>banner_base.png</code> + 43 张图案掩码，全部 64×64。</li>
+                    <li><code>assets/minecraft/textures/entity/shield/</code>：<code>base.png</code> + 42 张图案掩码，全部 64×64；<code>base.png</code> 同时充当满覆掩码。</li>
+                    <li><code>data/minecraft/banner_pattern/*.json</code>：共 43 个定义，<code>asset_id</code> 与文件名一一对应。</li>
+                    <li>上述 87 张 PNG 已复制到本站 <code>banner-assets/banner/</code> 与 <code>banner-assets/shield/</code>，页面只引用本地相对路径。</li>
+                </ul>
+
+                <h3>掩码语义与裁剪</h3>
+                <p>
+                    掩码不是“灰度越高越不透明”，而是 <b>alpha 通道 = 覆盖率</b>：RGB 是近白织物的明暗
+                    （实测 209–246），透明处 alpha=0；边缘抗锯齿会出现 alpha=191、128 等中间值。
+                    每层渲染流程为：填染料色 → <code>multiply</code> 叠掩码 → <code>destination-in</code>
+                    还原 alpha，等价于“纹理明暗 × 染料色 + 掩码覆盖率”。
+                </p>
+                <p>
+                    旗帜前脸取 <code>(1,1)</code> 起 <b>20×40</b>，盾牌前脸取 <code>(2,2)</code> 起 <b>10×20</b>；
+                    按纹理实际朝向渲染，<b>不做水平镜像</b>。<code>banner_base.png</code> 的旗面与图案掩码共用同一裁剪区，
+                    这里改用数据驱动的 <code>base.png</code> 平涂底色，与图案层保持一致。
+                </p>
+
+                <h3>43 个图案（asset_id → 页面名称）</h3>
+                <div class="idlist" id="idList"></div>
+
+                <h3>灾厄旗帜（原版，8 层）</h3>
+                <p>
+                    白底 + 菱形/青 → 底横条/淡灰 → 中竖条/灰 → 方框边/淡灰 → 中横条/黑 →
+                    上半幅/淡灰 → 圆形/淡灰 → 方框边/黑。该顺序取自原版袭击事件使用的固定组合
+                    （<code>Raid</code> 常量池顺序与 Wiki 图案表逐项吻合）。
+                </p>
+                <p>
+                    原版共 8 层，超出织布机 6 层上限，因此页面允许载入后完整预览，但会提示超限；
+                    手动新增仍限制在 6 层内。
+                </p>
+
+                <h3>形状校验</h3>
+                <ul>
+                    <li><code>border</code>：前脸四边各约 2px，内侧带 alpha=191 抗锯齿；y=20 行上 x1–2 与 x19–20 为实心。</li>
+                    <li><code>stripe_middle</code>：横向中条位于 y18–23，其中 y19–22 实心。</li>
+                    <li><code>stripe_left</code>：竖条落在观察者左侧 x1–7；官方中文“右白竖条”是按旗帜自身视角命名，本页统一改为观察者视角。</li>
+                    <li><code>gradient</code>：y1 的 alpha=255 连续降到 y40 的 0；<code>gradient_up</code> 方向相反。</li>
+                    <li><code>rhombus</code>：前脸菱形范围 x4–17、y9–32；<code>circle</code>：x5–16、y15–26。</li>
+                </ul>
+                <p>
+                    以上数值均由脚本直接读取 PNG 的 alpha 通道统计得到，可在页面中切换单层的“遮罩”逐项对照。
+                </p>
+            </div>
+        </details>
+
+        <p class="foot">贴图来自本地 Minecraft 客户端 jar，不依赖任何外部站点。</p>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            /* ==============================
+               基础数据
+               ============================== */
+
+            var SHAPES = {
+                banner: {
+                    dir: "banner-assets/banner/",
+                    sx: 1, sy: 1, sw: 20, sh: 40,
+                    w: 20, h: 40, label: "旗帜"
+                },
+                shield: {
+                    dir: "banner-assets/shield/",
+                    sx: 2, sy: 2, sw: 10, sh: 20,
+                    w: 10, h: 20, label: "盾牌"
+                }
+            };
+
+            var DYES = [
+                { id: "white", name: "白色", hex: "#F9FFFE" },
+                { id: "orange", name: "橙色", hex: "#F9801D" },
+                { id: "magenta", name: "品红色", hex: "#C74EBD" },
+                { id: "light_blue", name: "淡蓝色", hex: "#3AB3DA" },
+                { id: "yellow", name: "黄色", hex: "#FED83D" },
+                { id: "lime", name: "黄绿色", hex: "#80C71F" },
+                { id: "pink", name: "粉红色", hex: "#F38BAA" },
+                { id: "gray", name: "灰色", hex: "#474F52" },
+                { id: "light_gray", name: "淡灰色", hex: "#9D9D97" },
+                { id: "cyan", name: "青色", hex: "#169C9C" },
+                { id: "purple", name: "紫色", hex: "#8932B8" },
+                { id: "blue", name: "蓝色", hex: "#3C44AA" },
+                { id: "brown", name: "棕色", hex: "#835432" },
+                { id: "green", name: "绿色", hex: "#5E7C16" },
+                { id: "red", name: "红色", hex: "#B02E26" },
+                { id: "black", name: "黑色", hex: "#1D1D21" }
+            ];
+
+            var DYE_MAP = {};
+            DYES.forEach(function (d) { DYE_MAP[d.id] = d; });
+
+            var PATTERN_NAMES = {
+                base: "满覆底纹",
+                border: "方框边",
+                curly_border: "波纹边",
+                bricks: "砖纹",
+                stripe_top: "顶横条",
+                stripe_bottom: "底横条",
+                stripe_center: "中竖条",
+                stripe_middle: "中横条",
+                stripe_left: "左竖条",
+                stripe_right: "右竖条",
+                stripe_downleft: "斜条（/）",
+                stripe_downright: "斜条（\\）",
+                small_stripes: "竖条纹",
+                half_horizontal: "上半幅",
+                half_horizontal_bottom: "下半幅",
+                half_vertical: "左半幅",
+                half_vertical_right: "右半幅",
+                gradient: "自上渐淡",
+                gradient_up: "自下渐淡",
+                triangle_top: "顶三角",
+                triangle_bottom: "底三角",
+                triangles_top: "顶部波纹",
+                triangles_bottom: "底部波纹",
+                cross: "斜十字",
+                straight_cross: "正十字",
+                diagonal_left: "左上三角",
+                diagonal_right: "右上三角",
+                diagonal_up_left: "左下三角",
+                diagonal_up_right: "右下三角",
+                circle: "圆形",
+                rhombus: "菱形",
+                square_top_left: "左上角方块",
+                square_top_right: "右上角方块",
+                square_bottom_left: "左下角方块",
+                square_bottom_right: "右下角方块",
+                creeper: "苦力怕盾徽",
+                flower: "花朵盾徽",
+                skull: "头颅盾徽",
+                mojang: "Mojang 徽标",
+                piglin: "猪鼻",
+                globe: "地球",
+                flow: "涡流",
+                guster: "旋风"
+            };
+
+            var PATTERN_GROUPS = [
+                { label: "边饰与底纹", ids: ["base", "border", "curly_border", "bricks"] },
+                { label: "条带与分割", ids: [
+                    "stripe_top", "stripe_bottom", "stripe_center", "stripe_middle",
+                    "stripe_left", "stripe_right", "stripe_downleft", "stripe_downright",
+                    "small_stripes", "half_horizontal", "half_horizontal_bottom",
+                    "half_vertical", "half_vertical_right", "gradient", "gradient_up"
+                ] },
+                { label: "三角与交叉", ids: [
+                    "triangle_top", "triangle_bottom", "triangles_top", "triangles_bottom",
+                    "cross", "straight_cross", "diagonal_left", "diagonal_right",
+                    "diagonal_up_left", "diagonal_up_right"
+                ] },
+                { label: "圆形与方块", ids: [
+                    "circle", "rhombus", "square_top_left", "square_top_right",
+                    "square_bottom_left", "square_bottom_right"
+                ] },
+                { label: "盾徽与图案", ids: [
+                    "creeper", "flower", "skull", "mojang", "piglin", "globe", "flow", "guster"
+                ] }
+            ];
+
+            var ALL_PATTERNS = PATTERN_GROUPS.reduce(function (acc, g) {
+                return acc.concat(g.ids);
+            }, []);
+
+            var MAX_LAYERS = 6;
+
+            /* ==============================
+               状态
+               ============================== */
+
+            var state = {
+                shape: "banner",
+                base: "white",
+                layers: [
+                    { pattern: "rhombus", color: "red" },
+                    { pattern: "border", color: "black" }
+                ],
+                upto: 2,
+                selected: 0,
+                inspectMode: "color"
+            };
+
+            var PRESETS = [
+                {
+                    id: "ominous",
+                    name: "灾厄旗帜",
+                    badge: "原版",
+                    official: true,
+                    shape: "banner",
+                    base: "white",
+                    layers: [
+                        { pattern: "rhombus", color: "cyan" },
+                        { pattern: "stripe_bottom", color: "light_gray" },
+                        { pattern: "stripe_center", color: "gray" },
+                        { pattern: "border", color: "light_gray" },
+                        { pattern: "stripe_middle", color: "black" },
+                        { pattern: "half_horizontal", color: "light_gray" },
+                        { pattern: "circle", color: "light_gray" },
+                        { pattern: "border", color: "black" }
+                    ]
+                },
+                {
+                    id: "crimson",
+                    name: "红白菱纹",
+                    badge: "示例",
+                    shape: "banner",
+                    base: "white",
+                    layers: [
+                        { pattern: "rhombus", color: "red" },
+                        { pattern: "border", color: "black" },
+                        { pattern: "circle", color: "white" }
+                    ]
+                },
+                {
+                    id: "tide",
+                    name: "深海渐变",
+                    badge: "示例",
+                    shape: "banner",
+                    base: "blue",
+                    layers: [
+                        { pattern: "gradient", color: "light_blue" },
+                        { pattern: "globe", color: "white" },
+                        { pattern: "border", color: "cyan" }
+                    ]
+                },
+                {
+                    id: "ender",
+                    name: "末影守卫",
+                    badge: "示例",
+                    shape: "banner",
+                    base: "black",
+                    layers: [
+                        { pattern: "curly_border", color: "purple" },
+                        { pattern: "circle", color: "magenta" },
+                        { pattern: "creeper", color: "black" }
+                    ]
+                },
+                {
+                    id: "mojang",
+                    name: "Mojang 徽标",
+                    badge: "示例",
+                    shape: "banner",
+                    base: "red",
+                    layers: [
+                        { pattern: "mojang", color: "white" }
+                    ]
+                },
+                {
+                    id: "creeper",
+                    name: "苦力怕旗",
+                    badge: "示例",
+                    shape: "banner",
+                    base: "lime",
+                    layers: [
+                        { pattern: "creeper", color: "black" }
+                    ]
+                },
+                {
+                    id: "shield-demo",
+                    name: "盾牌示例",
+                    badge: "示例",
+                    shape: "shield",
+                    base: "blue",
+                    layers: [
+                        { pattern: "border", color: "yellow" },
+                        { pattern: "rhombus", color: "white" },
+                        { pattern: "circle", color: "red" }
+                    ]
+                },
+                {
+                    id: "laoda",
+                    name: "牢大",
+                    badge: "示例",
+                    shape: "banner",
+                    base: "light_blue",
+                    layers: [
+                        { pattern: "stripe_bottom", color: "brown" },
+                        { pattern: "triangle_bottom", color: "yellow" },
+                        { pattern: "rhombus", color: "brown" },
+                        { pattern: "half_horizontal", color: "light_blue" },
+                        { pattern: "circle", color: "brown" }
+                    ]
+                }
+            ];
+
+            /* ==============================
+               DOM
+               ============================== */
+
+            var previewCard = document.getElementById("previewCard");
+            var shapeSeg = document.getElementById("shapeSeg");
+            var mainCanvas = document.getElementById("mainCanvas");
+            var stageNote = document.getElementById("stageNote");
+
+            var inspectCanvas = document.getElementById("inspectCanvas");
+            var inspectIdx = document.getElementById("inspectIdx");
+            var inspectName = document.getElementById("inspectName");
+            var inspectSub = document.getElementById("inspectSub");
+            var maskSeg = document.getElementById("maskSeg");
+
+            var baseSwatches = document.getElementById("baseSwatches");
+            var baseName = document.getElementById("baseName");
+            var uptoInput = document.getElementById("upto");
+            var uptoText = document.getElementById("uptoText");
+            var showAllBtn = document.getElementById("showAll");
+            var layerCount = document.getElementById("layerCount");
+            var layersEl = document.getElementById("layers");
+            var addBtn = document.getElementById("addLayer");
+            var clearBtn = document.getElementById("clearLayers");
+            var limitNote = document.getElementById("limitNote");
+            var pickerEl = document.getElementById("picker");
+            var editIdx = document.getElementById("editIdx");
+            var editHint = document.getElementById("editHint");
+            var layerSwatches = document.getElementById("layerSwatches");
+            var patternTiles = document.getElementById("patternTiles");
+            var presetsEl = document.getElementById("presets");
+            var idListEl = document.getElementById("idList");
+
+            /* ==============================
+               贴图加载与绘制
+               ============================== */
+
+            var IMAGES = Object.create(null);
+            var renderQueued = false;
+
+            function scheduleRender() {
+                if (renderQueued) return;
+                renderQueued = true;
+                requestAnimationFrame(function () {
+                    renderQueued = false;
+                    renderAll();
+                });
+            }
+
+            function getImage(shape, id) {
+                var key = shape + "/" + id;
+                var img = IMAGES[key];
+                if (!img) {
+                    img = new Image();
+                    img.onload = scheduleRender;
+                    img.onerror = function () {
+                        console.warn("旗帜贴图加载失败：" + img.src);
+                    };
+                    img.src = SHAPES[shape].dir + id + ".png";
+                    IMAGES[key] = img;
+                }
+                return img;
+            }
+
+            function dyeHex(id) {
+                return (DYE_MAP[id] || DYE_MAP.white).hex;
+            }
+
+            function dyeName(id) {
+                return (DYE_MAP[id] || DYE_MAP.white).name;
+            }
+
+            function drawMask(ctx, shape, img) {
+                var s = SHAPES[shape];
+                ctx.drawImage(img, s.sx, s.sy, s.sw, s.sh, 0, 0, s.w, s.h);
+            }
+
+            // 把某一层掩码按染料色着色后画到 ctx 上（RGBA 都正确）
+            function paintLayer(ctx, shape, patternId, colorHex) {
+                var s = SHAPES[shape];
+                var img = getImage(shape, patternId);
+                if (!img.complete || !img.naturalWidth) return false;
+
+                var off = document.createElement("canvas");
+                off.width = s.w;
+                off.height = s.h;
+                var o = off.getContext("2d");
+
+                drawMask(o, shape, img);
+                o.globalCompositeOperation = "multiply";
+                o.fillStyle = colorHex;
+                o.fillRect(0, 0, s.w, s.h);
+                o.globalCompositeOperation = "destination-in";
+                drawMask(o, shape, img);
+
+                ctx.drawImage(off, 0, 0);
+                return true;
+            }
+
+            /* ==============================
+               渲染
+               ============================== */
+
+            function renderMain() {
+                var s = SHAPES[state.shape];
+                if (mainCanvas.width !== s.w || mainCanvas.height !== s.h) {
+                    mainCanvas.width = s.w;
+                    mainCanvas.height = s.h;
+                }
+
+                var ctx = mainCanvas.getContext("2d");
+                ctx.clearRect(0, 0, s.w, s.h);
+
+                paintLayer(ctx, state.shape, "base", dyeHex(state.base));
+
+                var shown = Math.min(state.upto, state.layers.length);
+                for (var i = 0; i < shown; i++) {
+                    var layer = state.layers[i];
+                    paintLayer(ctx, state.shape, layer.pattern, dyeHex(layer.color));
+                }
+
+                stageNote.textContent =
+                    dyeName(state.base) + "底色 · " +
+                    (shown === 0 ? "仅底色" : "显示到第 " + shown + " 层") +
+                    " · 共 " + state.layers.length + " 层";
+            }
+
+            function renderInspect() {
+                var s = SHAPES[state.shape];
+                if (inspectCanvas.width !== s.w || inspectCanvas.height !== s.h) {
+                    inspectCanvas.width = s.w;
+                    inspectCanvas.height = s.h;
+                }
+
+                var ctx = inspectCanvas.getContext("2d");
+                ctx.clearRect(0, 0, s.w, s.h);
+
+                if (!state.layers.length) {
+                    inspectIdx.textContent = "—";
+                    inspectName.textContent = "暂无图层";
+                    inspectSub.textContent = "添加图层后可单层查看";
+                    return;
+                }
+
+                var i = Math.min(state.selected, state.layers.length - 1);
+                state.selected = i;
+                var layer = state.layers[i];
+
+                inspectIdx.textContent = String(i + 1);
+                inspectName.textContent = PATTERN_NAMES[layer.pattern] || layer.pattern;
+                inspectSub.textContent = layer.pattern + " · " + dyeName(layer.color) +
+                    (i + 1 > state.upto ? " · 当前滑块未显示" : "");
+
+                if (state.inspectMode === "mask") {
+                    var img = getImage(state.shape, layer.pattern);
+                    if (img.complete && img.naturalWidth) {
+                        drawMask(ctx, state.shape, img);
+                        ctx.globalCompositeOperation = "source-in";
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(0, 0, s.w, s.h);
+                        ctx.globalCompositeOperation = "source-over";
+                    }
+                } else {
+                    paintLayer(ctx, state.shape, layer.pattern, dyeHex(layer.color));
+                }
+            }
+
+            /* ---------- 名称浮层 ---------- */
+
+            var tipEl = document.createElement("div");
+            tipEl.className = "tip";
+            tipEl.setAttribute("role", "status");
+            document.body.appendChild(tipEl);
+
+            var tipTimer = 0;
+
+            function showTip(el, text) {
+                tipEl.textContent = text;
+                tipEl.classList.add("is-on");
+
+                var rect = el.getBoundingClientRect();
+                var half = tipEl.offsetWidth / 2;
+                var x = rect.left + rect.width / 2;
+                var minX = half + 8;
+                var maxX = window.innerWidth - half - 8;
+                if (x < minX) x = minX;
+                if (x > maxX) x = maxX;
+
+                tipEl.style.left = x + "px";
+                tipEl.style.top = (rect.top - 6) + "px";
+            }
+
+            function hideTip() {
+                clearTimeout(tipTimer);
+                tipTimer = 0;
+                tipEl.classList.remove("is-on");
+            }
+
+            // 鼠标悬停/聚焦即时显示；触屏按住约 380ms 显示，抬手收起
+            function attachTip(el, text) {
+                el.addEventListener("mouseenter", function () { showTip(el, text); });
+                el.addEventListener("mouseleave", hideTip);
+                el.addEventListener("focus", function () { showTip(el, text); });
+                el.addEventListener("blur", hideTip);
+                el.addEventListener("pointerdown", function (event) {
+                    if (event.pointerType === "mouse") return;
+                    clearTimeout(tipTimer);
+                    tipTimer = setTimeout(function () { showTip(el, text); }, 380);
+                });
+                el.addEventListener("pointerup", hideTip);
+                el.addEventListener("pointercancel", hideTip);
+                el.addEventListener("pointerleave", hideTip);
+            }
+
+            window.addEventListener("scroll", hideTip, { passive: true });
+
+            /* ---------- 色块 ---------- */
+
+            function buildSwatches(container, onPick) {
+                DYES.forEach(function (d) {
+                    var btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "swatch";
+                    btn.dataset.color = d.id;
+                    btn.style.backgroundColor = d.hex;
+                    btn.title = d.name;
+                    btn.setAttribute("aria-label", d.name);
+                    btn.addEventListener("click", function () { onPick(d.id); });
+                    attachTip(btn, d.name);
+                    container.appendChild(btn);
+                });
+            }
+
+            function syncSwatches(container, id) {
+                Array.prototype.forEach.call(container.children, function (btn) {
+                    var on = btn.dataset.color === id;
+                    btn.classList.toggle("is-on", on);
+                    btn.setAttribute("aria-checked", on ? "true" : "false");
+                });
+            }
+
+            /* ---------- 图案图块 ---------- */
+
+            // 图块 = 深灰旗形剪影 + 浅灰图案，只表现形状本身
+            function drawTile(canvas, patternId) {
+                var s = SHAPES[state.shape];
+                canvas.width = s.w;
+                canvas.height = s.h;
+
+                var ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, s.w, s.h);
+
+                var baseImg = getImage(state.shape, "base");
+                if (baseImg.complete && baseImg.naturalWidth) {
+                    drawMask(ctx, state.shape, baseImg);
+                    ctx.globalCompositeOperation = "source-in";
+                    ctx.fillStyle = "#464c56";
+                    ctx.fillRect(0, 0, s.w, s.h);
+                    ctx.globalCompositeOperation = "source-over";
+                }
+
+                var img = getImage(state.shape, patternId);
+                if (!img.complete || !img.naturalWidth) return;
+
+                var off = document.createElement("canvas");
+                off.width = s.w;
+                off.height = s.h;
+                var o = off.getContext("2d");
+                drawMask(o, state.shape, img);
+                o.globalCompositeOperation = "source-in";
+                o.fillStyle = "#c9d0d9";
+                o.fillRect(0, 0, s.w, s.h);
+                ctx.drawImage(off, 0, 0);
+            }
+
+            function buildTiles() {
+                patternTiles.textContent = "";
+
+                PATTERN_GROUPS.forEach(function (group) {
+                    var block = document.createElement("div");
+                    block.className = "tile-group";
+
+                    var label = document.createElement("div");
+                    label.className = "tile-group-label";
+                    label.textContent = group.label;
+                    block.appendChild(label);
+
+                    var grid = document.createElement("div");
+                    grid.className = "tiles";
+
+                    group.ids.forEach(function (id) {
+                        var title = PATTERN_NAMES[id] || id;
+                        var btn = document.createElement("button");
+                        btn.type = "button";
+                        btn.className = "tile";
+                        btn.dataset.pattern = id;
+                        btn.title = title;
+                        btn.setAttribute("aria-label", title);
+
+                        var canvas = document.createElement("canvas");
+                        btn.appendChild(canvas);
+
+                        var name = document.createElement("span");
+                        name.className = "tile-name";
+                        name.textContent = title;
+                        btn.appendChild(name);
+
+                        btn.addEventListener("click", function () {
+                            var layer = currentLayer();
+                            if (!layer) return;
+                            layer.pattern = id;
+                            renderAll();
+                        });
+
+                        grid.appendChild(btn);
+                    });
+
+                    block.appendChild(grid);
+                    patternTiles.appendChild(block);
+                });
+            }
+
+            function renderTiles() {
+                Array.prototype.forEach.call(patternTiles.querySelectorAll(".tile"), function (btn) {
+                    drawTile(btn.firstElementChild, btn.dataset.pattern);
+                });
+            }
+
+            function currentLayer() {
+                if (!state.layers.length) return null;
+                var i = Math.min(state.selected, state.layers.length - 1);
+                state.selected = i;
+                return state.layers[i];
+            }
+
+            function makeOpButton(text, title, disabled) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "icon-btn";
+                btn.textContent = text;
+                btn.title = title;
+                btn.setAttribute("aria-label", title);
+                btn.disabled = !!disabled;
+                return btn;
+            }
+
+            function buildLayerRow(layer, index) {
+                var row = document.createElement("div");
+                row.className = "layer" + (index === state.selected ? " is-sel" : "");
+                row.dataset.index = String(index);
+                row.setAttribute("role", "button");
+                row.tabIndex = 0;
+                row.setAttribute("aria-label",
+                    "第 " + (index + 1) + " 层：" +
+                    (PATTERN_NAMES[layer.pattern] || layer.pattern) + " · " + dyeName(layer.color));
+
+                var idxBtn = document.createElement("button");
+                idxBtn.type = "button";
+                idxBtn.className = "layer-idx";
+                idxBtn.textContent = String(index + 1);
+                idxBtn.title = "选中第 " + (index + 1) + " 层";
+                idxBtn.addEventListener("click", function () {
+                    state.selected = index;
+                    renderAll();
+                });
+                row.appendChild(idxBtn);
+
+                var main = document.createElement("div");
+                main.className = "layer-main";
+
+                var thumb = document.createElement("canvas");
+                thumb.className = "thumb";
+                thumb.width = SHAPES[state.shape].w;
+                thumb.height = SHAPES[state.shape].h;
+                thumb.title = "本层缩略图";
+                paintLayer(thumb.getContext("2d"), state.shape, layer.pattern, dyeHex(layer.color));
+                main.appendChild(thumb);
+
+                var text = document.createElement("div");
+                text.className = "layer-text";
+
+                var name = document.createElement("span");
+                name.className = "layer-name";
+                name.textContent = PATTERN_NAMES[layer.pattern] || layer.pattern;
+                text.appendChild(name);
+
+                var sub = document.createElement("span");
+                sub.className = "layer-sub";
+
+                var dot = document.createElement("span");
+                dot.className = "color-dot";
+                dot.style.background = dyeHex(layer.color);
+                sub.appendChild(dot);
+
+                var colorName = document.createElement("span");
+                colorName.textContent = dyeName(layer.color);
+                sub.appendChild(colorName);
+
+                text.appendChild(sub);
+                main.appendChild(text);
+                row.appendChild(main);
+
+                var ops = document.createElement("div");
+                ops.className = "layer-ops";
+
+                var up = makeOpButton("↑", "上移一层", index === 0);
+                up.addEventListener("click", function () { moveLayer(index, -1); });
+                ops.appendChild(up);
+
+                var down = makeOpButton("↓", "下移一层", index === state.layers.length - 1);
+                down.addEventListener("click", function () { moveLayer(index, 1); });
+                ops.appendChild(down);
+
+                var del = makeOpButton("×", "删除这层", false);
+                del.classList.add("del");
+                del.addEventListener("click", function () { removeLayer(index); });
+                ops.appendChild(del);
+
+                row.appendChild(ops);
+
+                function selectRow() {
+                    if (state.selected === index) return;
+                    state.selected = index;
+                    renderAll();
+                }
+
+                row.addEventListener("click", function (event) {
+                    if (event.target.closest(".layer-ops, .layer-idx")) return;
+                    selectRow();
+                });
+
+                row.addEventListener("keydown", function (event) {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    selectRow();
+                });
+
+                return row;
+            }
+
+            function renderLayers() {
+                layersEl.textContent = "";
+                state.layers.forEach(function (layer, index) {
+                    layersEl.appendChild(buildLayerRow(layer, index));
+                });
+            }
+
+            function syncControls() {
+                baseName.textContent = dyeName(state.base);
+                syncSwatches(baseSwatches, state.base);
+
+                Array.prototype.forEach.call(shapeSeg.querySelectorAll("[data-shape]"), function (btn) {
+                    btn.classList.toggle("is-on", btn.dataset.shape === state.shape);
+                });
+
+                var total = state.layers.length;
+                var shown = Math.min(state.upto, total);
+
+                uptoInput.max = String(total);
+                uptoInput.value = String(shown);
+                uptoInput.disabled = total === 0;
+                showAllBtn.disabled = total === 0;
+                uptoText.textContent = shown === 0
+                    ? "仅显示底色"
+                    : "第 1–" + shown + " 层 / 共 " + total + " 层";
+
+                layerCount.textContent = total + " / " + MAX_LAYERS;
+                addBtn.disabled = total >= MAX_LAYERS;
+
+                if (total > MAX_LAYERS) {
+                    limitNote.hidden = false;
+                    limitNote.textContent = "当前组合共 " + total + " 层，超出织布机 " +
+                        MAX_LAYERS + " 层上限，仅作完整预览；删到 " + MAX_LAYERS + " 层后才能继续添加。";
+                } else if (total === MAX_LAYERS) {
+                    limitNote.hidden = false;
+                    limitNote.textContent = "已达织布机 6 层上限，仍可继续调整图案与顺序。";
+                } else {
+                    limitNote.hidden = true;
+                    limitNote.textContent = "";
+                }
+            }
+
+            // 当前层编辑器：颜色/图案按选中层高亮
+            function syncPicker() {
+                var layer = currentLayer();
+
+                if (!layer) {
+                    pickerEl.hidden = true;
+                    return;
+                }
+
+                pickerEl.hidden = false;
+                editIdx.textContent = String(state.selected + 1);
+                editHint.textContent = (PATTERN_NAMES[layer.pattern] || layer.pattern) +
+                    " · " + dyeName(layer.color);
+
+                syncSwatches(layerSwatches, layer.color);
+
+                Array.prototype.forEach.call(patternTiles.querySelectorAll(".tile"), function (btn) {
+                    btn.classList.toggle("is-on", btn.dataset.pattern === layer.pattern);
+                });
+            }
+
+            function renderAll() {
+                syncControls();
+                renderLayers();
+                syncPicker();
+                renderTiles();
+                renderMain();
+                renderInspect();
+            }
+
+            /* ==============================
+               操作
+               ============================== */
+
+            function moveLayer(index, delta) {
+                var target = index + delta;
+                if (target < 0 || target >= state.layers.length) return;
+                var moved = state.layers.splice(index, 1)[0];
+                state.layers.splice(target, 0, moved);
+                state.selected = target;
+                renderAll();
+            }
+
+            function removeLayer(index) {
+                state.layers.splice(index, 1);
+                if (state.selected >= state.layers.length) {
+                    state.selected = Math.max(0, state.layers.length - 1);
+                }
+                if (state.upto > state.layers.length) {
+                    state.upto = state.layers.length;
+                }
+                renderAll();
+            }
+
+            function addLayer() {
+                if (state.layers.length >= MAX_LAYERS) return;
+
+                var patternPool = ["rhombus", "stripe_middle", "border", "circle", "triangle_top", "creeper", "flower", "globe"];
+                var nextPattern = patternPool.filter(function (id) {
+                    return !state.layers.some(function (l) { return l.pattern === id; });
+                })[0] || "rhombus";
+
+                var colorPool = ["red", "black", "white", "blue", "yellow", "green"];
+                var usedColors = state.layers.map(function (l) { return l.color; });
+                var nextColor = colorPool.filter(function (id) {
+                    return usedColors.indexOf(id) === -1;
+                })[0] || "white";
+
+                state.layers.push({ pattern: nextPattern, color: nextColor });
+                state.selected = state.layers.length - 1;
+                state.upto = state.layers.length;
+                renderAll();
+            }
+
+            function loadPreset(preset) {
+                state.shape = preset.shape;
+                state.base = preset.base;
+                state.layers = preset.layers.map(function (l) {
+                    return { pattern: l.pattern, color: l.color };
+                });
+                state.upto = state.layers.length;
+                state.selected = 0;
+                renderAll();
+
+                if (window.innerWidth < 860) {
+                    previewCard.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
+
+            /* ==============================
+               静态控件初始化
+               ============================== */
+
+            function buildPresetButtons() {
+                PRESETS.forEach(function (preset) {
+                    var btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "chip";
+                    btn.title = "载入「" + preset.name + "」";
+
+                    var name = document.createElement("span");
+                    name.className = "chip-name";
+                    name.textContent = preset.name;
+                    btn.appendChild(name);
+
+                    var badge = document.createElement("span");
+                    badge.className = "badge" + (preset.official ? "" : " sample");
+                    badge.textContent = preset.badge;
+                    btn.appendChild(badge);
+
+                    btn.addEventListener("click", function () { loadPreset(preset); });
+                    presetsEl.appendChild(btn);
+                });
+            }
+
+            function buildIdList() {
+                ALL_PATTERNS.forEach(function (id) {
+                    var span = document.createElement("span");
+                    span.textContent = id + " → " + PATTERN_NAMES[id];
+                    idListEl.appendChild(span);
+                });
+            }
+
+            buildSwatches(baseSwatches, function (id) {
+                state.base = id;
+                renderAll();
+            });
+
+            buildSwatches(layerSwatches, function (id) {
+                var layer = currentLayer();
+                if (!layer) return;
+                layer.color = id;
+                renderAll();
+            });
+
+            buildTiles();
+
+            uptoInput.addEventListener("input", function () {
+                state.upto = Number(uptoInput.value);
+                syncControls();
+                renderMain();
+                renderInspect();
+            });
+
+            showAllBtn.addEventListener("click", function () {
+                state.upto = state.layers.length;
+                renderAll();
+            });
+
+            addBtn.addEventListener("click", addLayer);
+
+            clearBtn.addEventListener("click", function () {
+                state.layers = [];
+                state.upto = 0;
+                state.selected = 0;
+                renderAll();
+            });
+
+            shapeSeg.addEventListener("click", function (event) {
+                var btn = event.target.closest("[data-shape]");
+                if (!btn) return;
+                state.shape = btn.dataset.shape;
+                renderAll();
+            });
+
+            maskSeg.addEventListener("click", function (event) {
+                var btn = event.target.closest("[data-mode]");
+                if (!btn) return;
+                state.inspectMode = btn.dataset.mode;
+                Array.prototype.forEach.call(maskSeg.querySelectorAll("[data-mode]"), function (b) {
+                    b.classList.toggle("is-on", b.dataset.mode === state.inspectMode);
+                });
+                renderInspect();
+            });
+
+            /* ==============================
+               启动
+               ============================== */
+
+            buildPresetButtons();
+            buildIdList();
+
+            if (ALL_PATTERNS.length !== 43) {
+                console.warn("图案数量不是 43，当前为 " + ALL_PATTERNS.length);
+            }
+
+            renderAll();
+
+            // 预加载两种外观的全部掩码，切换形状时不闪空
+            Object.keys(SHAPES).forEach(function (shape) {
+                ALL_PATTERNS.forEach(function (id) {
+                    getImage(shape, id);
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>
