@@ -311,6 +311,16 @@
 
     .mod-head h3 { min-width: 0; }
 
+    .mod-link {
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .mod-link:hover {
+        color: var(--accent);
+        text-decoration: underline;
+    }
+
     .tag {
         flex: none;
         margin-top: 1px;
@@ -393,13 +403,13 @@
         <h1>Fabric 模组推荐</h1>
         <p class="sub">
             整理自 26.3-Fabric 实例 mods 目录里实际安装的 45 个 jar，去掉前置库与汉化补丁后，
-            保留 34 个有独立功能的模组。另附 8 个本地没装、可以留意的模组和 4 个资源包，
+            保留 34 个有独立功能的模组。另附 9 个本地没装、可以留意的模组和 4 个资源包，
             装不装自己判断。
         </p>
         <div class="stats">
             <div class="stat"><b>45</b> 个 jar</div>
             <div class="stat"><b>34</b> 个已装收录</div>
-            <div class="stat"><b>8</b> 个其它推荐</div>
+            <div class="stat"><b>9</b> 个其它推荐</div>
             <div class="stat"><b>4</b> 个资源包</div>
         </div>
     </header>
@@ -409,7 +419,7 @@
         <a class="chip" href="#build">建造与辅助 <span>5</span></a>
         <a class="chip" href="#perf">性能优化 <span>14</span></a>
         <a class="chip" href="#network">联网与进阶 <span>3</span></a>
-        <a class="chip" href="#extra">其它推荐 <span>8</span></a>
+        <a class="chip" href="#extra">其它推荐 <span>9</span></a>
         <a class="chip" href="#packs">资源包 <span>4</span></a>
     </nav>
 
@@ -656,7 +666,8 @@
         <section class="extra-block" id="extra">
             <div class="group-head">
                 <h2>其它推荐</h2>
-                <span class="count">8</span>
+                <span class="tag">未安装</span>
+                <span class="count">9</span>
             </div>
             <p class="group-desc">本地 mods 目录里没有这些，按现有说明整理；装不装、装哪个版本自己判断。</p>
             <div class="grid">
@@ -717,6 +728,16 @@
                     <h3>Iris Shaders</h3>
                     <p class="desc">为游戏提供光影支持，配合光影包使用。</p>
                 </article>
+
+                <article class="mod">
+                    <div class="mod-head">
+                        <h3>
+                            <a class="mod-link" href="https://modrinth.com/mod/offline-mode-fix" target="_blank" rel="noopener noreferrer">Offline Mode Fix</a>
+                        </h3>
+                        <span class="tag">聊天卡顿</span>
+                    </div>
+                    <p class="desc">主要解决聊天卡顿：可能是服务端的消息格式问题，别人一发言游戏就卡一下。在聊天设置里关闭「隐藏匹配的名称」无法解决时，可以安装尝试。</p>
+                </article>
             </div>
         </section>
 
@@ -764,7 +785,7 @@
         </aside>
     </main>
 
-    <footer>34 个已装模组 · 8 个其它推荐 · 4 个资源包</footer>
+    <footer>34 个已装模组 · 9 个其它推荐 · 4 个资源包</footer>
 </div>
 </body>
 

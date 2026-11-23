@@ -53,6 +53,14 @@
     width:38px;height:38px;border:1px solid var(--line);border-radius:10px;
     background:var(--paper);color:var(--ink);cursor:pointer;padding:0;
   }
+  .back-link{
+    flex:0 0 auto;display:inline-flex;align-items:center;min-height:34px;padding:0 12px;
+    border:1px solid var(--line);border-radius:10px;background:var(--paper);
+    box-shadow:var(--shadow);color:var(--muted);font-size:13px;
+    text-decoration:none;white-space:nowrap;transition:color .18s,border-color .18s;
+  }
+  .back-link:hover{color:var(--ink);border-color:var(--accent-line)}
+  .back-link:active{transform:scale(.97)}
 
   /* ---------- 侧边栏 ---------- */
   .sidebar{
@@ -132,6 +140,7 @@
     border-radius:14px;padding:16px 18px;transition:border-color .2s,transform .2s,box-shadow .2s;
   }
   .hero-card:hover{border-color:var(--accent-line);transform:translateY(-2px);box-shadow:var(--shadow)}
+  .hero-card-full{grid-column:1/-1}
   .hc-kicker{display:block;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:2px}
   .hc-title{display:block;font-size:16px;font-weight:700;color:var(--ink)}
   .hc-desc{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
@@ -252,6 +261,21 @@
   }
   .lightbox .lb-close:hover{background:rgba(255,255,255,.16)}
 
+  /* ---------- 返回顶部 ---------- */
+  .to-top{
+    position:fixed;right:24px;bottom:24px;z-index:44;
+    width:46px;height:46px;padding:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--paper);border:1px solid var(--line);color:var(--ink);
+    box-shadow:0 4px 16px rgba(29,36,32,.16);cursor:pointer;
+    opacity:0;visibility:hidden;transform:translateY(10px);
+    transition:opacity .22s,transform .22s,visibility .22s,border-color .18s,color .18s;
+  }
+  .to-top.show{opacity:1;visibility:visible;transform:none}
+  .to-top:hover{border-color:var(--accent-line);color:var(--accent)}
+  .to-top:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .to-top svg{width:20px;height:20px}
+
   /* ---------- 响应式 ---------- */
   @media (max-width:1024px){
     .sidebar{transform:translateX(-100%);transition:transform .28s ease;width:min(86vw,340px);box-shadow:0 0 40px rgba(0,0,0,.3)}
@@ -275,6 +299,8 @@
     .steps li,.bullets li{font-size:14.5px;padding-left:30px}
     .steps li::before{width:20px;height:20px;font-size:11px}
     .path{font-size:13.5px}
+    .back-link{min-height:32px;padding:0 10px;font-size:12.5px}
+    .to-top{right:14px;bottom:calc(18px + env(safe-area-inset-bottom));width:42px;height:42px;box-shadow:0 3px 12px rgba(29,36,32,.18)}
   }
   @media (max-width:640px){
     table,thead,tbody,tr,th,td{display:block}
@@ -301,7 +327,7 @@
     *{transition:none!important}
   }
   @media print{
-    .sidebar,.topbar,.overlay,.menu-btn,.lightbox{display:none!important}
+    .sidebar,.topbar,.overlay,.menu-btn,.lightbox,.to-top{display:none!important}
     .main{margin:0}
     .wrap{padding:0;max-width:none}
     .topic{box-shadow:none;break-inside:avoid}
@@ -321,6 +347,11 @@
   </div>
 
   <nav class="nav" id="nav" aria-label="章节导航">
+    <div class="nav-group">
+      <a class="nav-label" href="#part-0">基础教程</a>
+      <a href="#t0-1" data-title="1. 选区"><span class="idx">01</span>选区</a>
+      <a href="#t0-2" data-title="2. 复制投影"><span class="idx">02</span>复制投影</a>
+    </div>
     <div class="nav-group">
       <a class="nav-label" href="#part-1">第一部分 · 投影使用技巧</a>
       <a href="#t1-1" data-title="1. 如何放置原理图"><span class="idx">01</span>如何放置原理图</a>
@@ -349,7 +380,7 @@
     </div>
   </nav>
 
-  <div class="side-foot">2 个部分 · 19 个技巧 · 11 张附图</div>
+  <div class="side-foot">3 个部分 · 21 个小节 · 12 张附图</div>
 </aside>
 
 <div class="overlay" id="overlay"></div>
@@ -360,6 +391,7 @@
       <path d="M4 7h16M4 12h16M4 17h16"/>
     </svg>
   </button>
+  <a class="back-link" href="index.html">← 工具箱</a>
   <div class="crumb">投影与投影打印机 <span aria-hidden="true">/</span> 当前：<b id="currentLabel">概览</b></div>
   <div class="progress"><span id="progressBar"></span></div>
 </header>
@@ -370,14 +402,19 @@
     <section class="hero" id="top">
       <p class="eyebrow">LITEMATICA 文档整理</p>
       <h1>投影与投影打印机<br>使用技巧</h1>
-      <p class="sub">从原理图的加载、摆放与编辑，到投影打印机的开关、模式与速度设置，按原文顺序与层级整理为可跳转的页面。</p>
+      <p class="sub">从选区与复制投影，到原理图的加载、摆放与编辑，再到投影打印机的开关、模式与速度设置，按原文顺序与层级整理为可跳转的页面。</p>
       <div class="meta">
-        <span>2 个部分</span>
-        <span>19 个技巧</span>
-        <span>11 张附图</span>
+        <span>3 个部分</span>
+        <span>21 个小节</span>
+        <span>12 张附图</span>
         <span>原文 + 6 条补充</span>
       </div>
       <div class="hero-links">
+        <a class="hero-card hero-card-full" href="#part-0">
+          <span class="hc-kicker">基础教程</span>
+          <span class="hc-title">选区与复制投影</span>
+          <span class="hc-desc">木棍选区、区域编辑器调整角点、保存与临时复制</span>
+        </a>
         <a class="hero-card" href="#part-1">
           <span class="hc-kicker">第一部分</span>
           <span class="hc-title">投影使用技巧</span>
@@ -389,6 +426,57 @@
           <span class="hc-desc">设置入口、快捷键、工作模式与放置/破坏速度</span>
         </a>
       </div>
+    </section>
+
+    <!-- ============ 基础教程 ============ -->
+    <section class="part" id="part-0">
+      <div class="part-head">
+        <span class="part-index">基础教程</span>
+        <h2>选区与复制投影</h2>
+        <p>共 2 节：先用木棍划定选区，再把选区保存为原理图，或临时复制成投影。</p>
+      </div>
+
+      <section class="topic" id="t0-1">
+        <div class="topic-head">
+          <span class="num">01</span>
+          <h3>选区</h3>
+        </div>
+        <p class="lead">手持木棍点两个方块，就能划定一个长方体选区。</p>
+        <ul class="bullets">
+          <li>手持木棍，左键点击方块 A、右键点击方块 B，即可完成选区。</li>
+        </ul>
+        <p class="lead">需要精确调整时，可以用区域编辑器，或切换到选区工具。</p>
+        <ul class="bullets">
+          <li>按 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">区域编辑器</span>，调整选区角点坐标。</li>
+          <li>手持木棍，切换到模式 1（选区工具），<kbd>Ctrl</kbd> + <kbd>滚轮</kbd> 调整；注意调整的是当前选中的那个角点。</li>
+          <li>对准角点按下滚轮键可选中该角点；如果不对准角点，则选中的是整个选区，此时 <kbd>Ctrl</kbd> + <kbd>滚轮</kbd> 调整的是整个选区。</li>
+          <li>选区内可以使用打印机进行挖掘、填充、排流体等操作。</li>
+        </ul>
+        <figure class="shot">
+          <img src="images/fig-12.png" width="593" height="461" alt="区域编辑器（简易模式）：选区名称、角点 1 与角点 2 的 X/Y/Z 坐标，以及「保存原理图」按钮" loading="lazy" decoding="async">
+          <figcaption>图 12 · 区域编辑器（简易模式）：填写选区名称，核对角点 1、角点 2 坐标后点击「保存原理图」</figcaption>
+        </figure>
+      </section>
+
+      <section class="topic" id="t0-2">
+        <div class="topic-head">
+          <span class="num">02</span>
+          <h3>复制投影</h3>
+        </div>
+        <p class="lead">完成选区后，有两种方式把选区变成投影。</p>
+        <p class="lead"><strong>第一种 · 保存投影到文件</strong></p>
+        <ol class="steps">
+          <li>先按上一节完成选区。</li>
+          <li><kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">区域编辑器</span> <span class="sep">→</span> <span class="menu-item">保存原理图</span>。</li>
+          <li>推荐填写选区名称，保存的文件名就是这个名称，也可以在保存时修改。</li>
+        </ol>
+        <p class="lead"><strong>第二种 · 临时复制选区</strong></p>
+        <ol class="steps">
+          <li><kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">配置菜单</span> <span class="sep">→</span> <span class="menu-item">快捷键</span>，为「克隆选取」设置快捷键。</li>
+          <li>选区后按该快捷键，即可临时复制选区为投影。</li>
+          <li>想保存这个临时投影，去 <kbd>M</kbd> <span class="sep">→</span> <span class="menu-item">已加载原理图</span> <span class="sep">→</span> <span class="menu-item">保存到文件</span>。</li>
+        </ol>
+      </section>
     </section>
 
     <!-- ============ 第一部分 ============ -->
@@ -742,7 +830,8 @@
     <footer class="footer">
       <h4>整理说明</h4>
       <ul>
-        <li>原文为 5 页 Word 文档，共 52 段、9 张界面截图；原文无表格，截图已按出现位置内嵌。另有后续补充技巧 6 条与附图 2 张（图 10、图 11），不计入原文统计；本页共 11 张附图。</li>
+        <li>「基础教程」部分（选区、复制投影）为后续补充的入门说明，共 2 节、1 张附图（图 12），不计入原文统计；其中菜单与快捷键均按补充说明原样保留。</li>
+        <li>原文为 5 页 Word 文档，共 52 段、9 张界面截图；原文无表格，截图已按出现位置内嵌。另有后续补充技巧 6 条与附图 2 张（图 10、图 11），不计入原文统计；本页共 12 张附图。</li>
         <li>原文编号存在错乱：投影部分「批量替换投影方块」为自动编号 6、「单人模式粘贴原理图」写作 7；打印机部分后三项的自动编号为 3、4、5。本页按语义整理，投影部分续编为 1–13，打印机部分为 1–6。</li>
         <li>原文「匠放置间隔增加到 2 或者更高」中的「匠」疑为「将」，本页按「将」表述。</li>
         <li>本页正文以原文内容为主；新增的 6 条补充技巧与 2 张附图来自后续补充，未加入其他原文之外的说法。操作路径中的箭头表示界面层级。</li>
@@ -751,6 +840,12 @@
 
   </div>
 </main>
+
+<button class="to-top" id="toTop" type="button" aria-label="返回顶部" title="返回顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+  </svg>
+</button>
 
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="查看原文截图">
   <button class="lb-close" id="lbClose" aria-label="关闭图片">✕</button>
@@ -769,6 +864,7 @@
   var currentLabel = document.getElementById('currentLabel');
   var progressBar = document.getElementById('progressBar');
   var lightbox = document.getElementById('lightbox');
+  var toTop = document.getElementById('toTop');
   var lbImg = document.getElementById('lbImg');
   var lbCap = document.getElementById('lbCap');
   var lbClose = document.getElementById('lbClose');
@@ -828,6 +924,7 @@
     var doc = document.documentElement;
     var max = doc.scrollHeight - window.innerHeight;
     progressBar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+    toTop.classList.toggle('show', window.scrollY > 480);
     ticking = false;
   }
   function requestUpdate() {
@@ -840,6 +937,20 @@
   window.addEventListener('resize', requestUpdate);
   window.addEventListener('load', update);
   update();
+
+  /* ---------- 返回顶部 ---------- */
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  toTop.addEventListener('click', function () {
+    if (window.location.hash) {
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) {
+        /* 本地以 file:// 打开时浏览器可能限制 history API，退化为同名路径跳转以去掉 hash */
+        window.location.replace(window.location.pathname + window.location.search);
+      }
+    }
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
 
   /* ---------- 图片灯箱 ---------- */
   var shots = document.querySelectorAll('.shot img');
